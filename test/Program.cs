@@ -38,7 +38,8 @@ namespace test
                 TcpClient client = server.AcceptTcpClient();
                 Console.WriteLine("Client connected...");
 
-                Task.Run(() => HandleClient(client, rooms));
+                Thread thread = new Thread(() => HandleClient(client, rooms));
+                thread.Start();
             }
         }
 
@@ -93,7 +94,8 @@ namespace test
                 byte[] data = Encoding.ASCII.GetBytes($"JOIN {roomName}");
                 stream.Write(data, 0, data.Length);
 
-                Task receiveTask = Task.Run(() => ReceiveMessages(stream, client));
+                Thread receiveThread = new Thread(() => ReceiveMessages(stream, client));
+                receiveThread.Start();
 
                 while (client.Connected)
                 {
@@ -105,7 +107,7 @@ namespace test
                     }
                 }
 
-                receiveTask.Wait();
+                receiveThread.Join();
             }
         }
 

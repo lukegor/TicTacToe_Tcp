@@ -40,7 +40,8 @@ namespace test
 
         private void StartGame()
         {
-            Task.Run(() => GameLoop());
+            Thread gameThread = new Thread(() => GameLoop());
+            gameThread.Start();
         }
 
         private void GameLoop()
