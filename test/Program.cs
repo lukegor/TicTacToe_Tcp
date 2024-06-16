@@ -27,9 +27,16 @@ namespace test
 
         private static void StartServer()
         {
-            TcpListener server = new TcpListener(IPAddress.Any, 5000);
+            Console.Write("Enter the port number to listen on: ");
+            int port;
+            while (!int.TryParse(Console.ReadLine(), out port) || port <= 0)
+            {
+                Console.WriteLine("Invalid port number. Please enter a valid port number:");
+            }
+
+            TcpListener server = new TcpListener(IPAddress.Any, port);
             server.Start();
-            Console.WriteLine("Server started...");
+            Console.WriteLine($"Server started on port {port}...");
 
             List<Room> rooms = new List<Room>();
 
@@ -74,7 +81,7 @@ namespace test
                     {
                         byte[] data = Encoding.ASCII.GetBytes("Room is full.");
                         stream.Write(data, 0, data.Length);
-                        client.Close();
+                        //client.Close();
                     }
                 }
             }
@@ -82,13 +89,40 @@ namespace test
 
         private static void StartClient()
         {
+            Console.WriteLine("Do you want to use the default hostname (localhost)? (Y/N)");
+            string useDefault = Console.ReadLine()?.ToUpper();
+
+            string hostname;
+            if (useDefault == "Y")
+            {
+                hostname = "localhost"; // Default hostname is localhost
+            }
+            else
+            {
+                Console.WriteLine("Enter the server hostname or IP address:");
+                hostname = Console.ReadLine();
+            }
+
+            Console.WriteLine("Enter the port number to connect:");
+            int port;
+            while (!int.TryParse(Console.ReadLine(), out port) || port <= 0)
+            {
+                Console.WriteLine("Invalid port number. Please enter a valid port number:");
+            }
+
             while (true)
             {
                 Console.WriteLine("Enter the room name to join:");
                 string roomName = Console.ReadLine();
 
+                if (string.IsNullOrWhiteSpace(roomName))
+                {
+                    Console.WriteLine("Room name cannot be empty. Please enter a valid room name.");
+                    continue; // Prompt again for room name
+                }
+
                 TcpClient client = new TcpClient();
-                client.Connect("127.0.0.1", 5000);
+                client.Connect("127.0.0.1", port);
                 NetworkStream stream = client.GetStream();
 
                 byte[] data = Encoding.ASCII.GetBytes($"JOIN {roomName}");

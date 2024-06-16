@@ -51,7 +51,8 @@ namespace test
 
             while (!gameEnded)
             {
-                SendMessage($"Player {currentPlayer + 1}'s turn");
+                SendMessage("Your turn", streams[currentPlayer]);
+                SendMessage("Opponent's turn", streams[1 - currentPlayer]);
                 bool validMove = false;
 
                 while (!validMove)
@@ -80,7 +81,7 @@ namespace test
                     validMove = ProcessMove(move, currentPlayer);
                     if (!validMove)
                     {
-                        SendMessage("Invalid move. Try again.");
+                        SendMessage("Invalid move. Try again.", streams[currentPlayer]);
                     }
                     else
                     {
@@ -186,11 +187,23 @@ namespace test
 
         private void SendMessage(string message)
         {
-            byte[] data = Encoding.ASCII.GetBytes(message);
-
             foreach (var stream in streams)
             {
+                SendMessage(message, stream);
+            }
+        }
+
+        private void SendMessage(string message, NetworkStream stream)
+        {
+            byte[] data = Encoding.ASCII.GetBytes(message);
+
+            try
+            {
                 stream.Write(data, 0, data.Length);
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine($"Error sending message to a client: {ex.Message}");
             }
         }
 
