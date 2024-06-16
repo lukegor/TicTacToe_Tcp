@@ -34,57 +34,8 @@ namespace test
                 Console.WriteLine("Invalid port number. Please enter a valid port number:");
             }
 
-            TcpListener server = new TcpListener(IPAddress.Any, port);
+            Server server = new Server(port);
             server.Start();
-            Console.WriteLine($"Server started on port {port}...");
-
-            List<Room> rooms = new List<Room>();
-
-            while (true)
-            {
-                TcpClient client = server.AcceptTcpClient();
-                Console.WriteLine("Client connected...");
-
-                Thread thread = new Thread(() => HandleClient(client, rooms));
-                thread.Start();
-            }
-        }
-
-        private static void HandleClient(TcpClient client, List<Room> rooms)
-        {
-            NetworkStream stream = client.GetStream();
-            byte[] buffer = new byte[1024];
-            int bytesRead = stream.Read(buffer, 0, buffer.Length);
-            string clientMessage = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-
-            if (clientMessage.StartsWith("JOIN"))
-            {
-                string roomName = clientMessage.Split(' ')[1];
-                lock (rooms)
-                {
-                    Room room = rooms.Find(r => r.Name == roomName);
-                    if (room == null)
-                    {
-                        room = new Room(roomName);
-                        rooms.Add(room);
-                    }
-
-                    if (room.PlayerCount < 2 || room.PlayerCount == 0)
-                    {
-                        room.AddPlayer(client, stream);
-                        if (room.PlayerCount == 0)
-                        {
-                            rooms.Remove(room);
-                        }
-                    }
-                    else
-                    {
-                        byte[] data = Encoding.ASCII.GetBytes("Room is full.");
-                        stream.Write(data, 0, data.Length);
-                        //client.Close();
-                    }
-                }
-            }
         }
 
         private static void StartClient()
@@ -103,12 +54,7 @@ namespace test
                 hostname = Console.ReadLine();
             }
 
-            Console.WriteLine("Enter the port number to connect:");
-            int port;
-            while (!int.TryParse(Console.ReadLine(), out port) || port <= 0)
-            {
-                Console.WriteLine("Invalid port number. Please enter a valid port number:");
-            }
+            int port = GetPortNumber();
 
             while (true)
             {
@@ -122,7 +68,7 @@ namespace test
                 }
 
                 TcpClient client = new TcpClient();
-                client.Connect("127.0.0.1", port);
+                client.Connect(hostname, port);
                 NetworkStream stream = client.GetStream();
 
                 byte[] data = Encoding.ASCII.GetBytes($"JOIN {roomName}");
@@ -143,6 +89,17 @@ namespace test
 
                 receiveThread.Join();
             }
+        }
+
+        private static int GetPortNumber()
+        {
+            Console.WriteLine("Enter the port number to connect:");
+            int port;
+            while (!int.TryParse(Console.ReadLine(), out port) || port <= 0)
+            {
+                Console.WriteLine("Invalid port number. Please enter a valid port number:");
+            }
+            return port;
         }
 
         private static void ReceiveMessages(NetworkStream stream, TcpClient client)
