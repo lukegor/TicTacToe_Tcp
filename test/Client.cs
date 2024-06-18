@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -22,37 +23,50 @@ namespace test
         {
             while (true)
             {
-                Console.WriteLine("Enter the room name to join:");
-                string roomName = Console.ReadLine();
+                JoinRoom();
+            }
+        }
+
+        private void JoinRoom()
+        {
+            TcpClient client = new TcpClient();
+            client.Connect(hostname, port);
+            NetworkStream stream = client.GetStream();
+
+            //Read the server's message asking for the room name
+            byte[] buffer = new byte[1024];
+            int bytesRead = stream.Read(buffer, 0, buffer.Length);
+            string serverMessage = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+            Console.WriteLine(serverMessage);
+
+            string roomName = string.Empty;
+            while (string.IsNullOrWhiteSpace(roomName))
+            {
+                roomName = Console.ReadLine();
 
                 if (string.IsNullOrWhiteSpace(roomName))
                 {
                     Console.WriteLine("Room name cannot be empty. Please enter a valid room name.");
-                    continue; // Prompt again for room name
                 }
-
-                TcpClient client = new TcpClient();
-                client.Connect(hostname, port);
-                NetworkStream stream = client.GetStream();
-
-                byte[] data = Encoding.ASCII.GetBytes($"JOIN {roomName}");
-                stream.Write(data, 0, data.Length);
-
-                Thread receiveThread = new Thread(() => ReceiveMessages(stream, client));
-                receiveThread.Start();
-
-                while (client.Connected)
-                {
-                    string input = Console.ReadLine();
-                    if (client.Connected)
-                    {
-                        data = Encoding.ASCII.GetBytes(input);
-                        stream.Write(data, 0, data.Length);
-                    }
-                }
-
-                receiveThread.Join();
             }
+
+            byte[] data = Encoding.ASCII.GetBytes($"JOIN {roomName}");
+            stream.Write(data, 0, data.Length);
+
+            Thread receiveThread = new Thread(() => ReceiveMessages(stream, client));
+            receiveThread.Start();
+
+            while (client.Connected)
+            {
+                string input = Console.ReadLine();
+                if (client.Connected)
+                {
+                    data = Encoding.ASCII.GetBytes(input);
+                    stream.Write(data, 0, data.Length);
+                }
+            }
+
+            receiveThread.Join();
         }
 
         private static void ReceiveMessages(NetworkStream stream, TcpClient client)
@@ -82,14 +96,14 @@ namespace test
 
                 if (serverMessage.Contains("wins") || serverMessage.Contains("draw"))
                 {
-                    Console.WriteLine("Game over. Press Enter to join another room.");
+                    Console.WriteLine("Game over. Press Enter to reconnect.");
                     client.Close();
                     break;
                 }
 
-                if (serverMessage.Contains("Player disconnected. You win by walkover."))
+                if (serverMessage.Contains("Opponent disconnected. You win by walkover."))
                 {
-                    Console.WriteLine("Game over. Press Enter to join another room.");
+                    Console.WriteLine("Game over. Press Enter to reconnect.");
                     client.Close();
                     break;
                 }

@@ -39,38 +39,68 @@ namespace test
         private void HandleClient(TcpClient client)
         {
             NetworkStream stream = client.GetStream();
-            byte[] buffer = new byte[1024];
-            int bytesRead = stream.Read(buffer, 0, buffer.Length);
-            string clientMessage = Encoding.ASCII.GetString(buffer, 0, bytesRead);
 
-            if (clientMessage.StartsWith("JOIN"))
+            string roomName = ValidateRoomName(stream);
+            lock (rooms)
             {
-                string roomName = clientMessage.Split(' ')[1];
-                lock (rooms)
+                Room room = rooms.Find(r => r.Name == roomName);
+                if (room == null)
                 {
-                    Room room = rooms.Find(r => r.Name == roomName);
-                    if (room == null)
-                    {
-                        room = new Room(roomName);
-                        rooms.Add(room);
-                    }
+                    room = new Room(roomName);
+                    rooms.Add(room);
+                }
 
-                    if (room.PlayerCount < 2 || room.PlayerCount == 0)
+                if (room.PlayerCount < 2 || room.PlayerCount == 0)
+                {
+                    room.AddPlayer(client, stream);
+                    if (room.PlayerCount == 0)
                     {
-                        room.AddPlayer(client, stream);
-                        if (room.PlayerCount == 0)
-                        {
-                            rooms.Remove(room);
-                        }
+                        rooms.Remove(room);
                     }
-                    else
+                }
+                else
+                {
+                    byte[] data = Encoding.ASCII.GetBytes("Room is full.");
+                    stream.Write(data, 0, data.Length);
+                    //client.Close();
+                }
+            }
+        }
+
+        private string ValidateRoomName(NetworkStream stream)
+        {
+            byte[] buffer = new byte[1024];
+            string roomName = string.Empty;
+
+            try
+            {
+                while (string.IsNullOrWhiteSpace(roomName))
+                {
+                    string requestMessage = "Enter the room name to join:";
+                    byte[] requestData = Encoding.ASCII.GetBytes(requestMessage);
+                    stream.Write(requestData, 0, requestData.Length);
+
+                    int bytesRead = stream.Read(buffer, 0, buffer.Length);
+                    string clientMessage = Encoding.ASCII.GetString(buffer, 0, bytesRead).Trim();
+
+                    if (!string.IsNullOrWhiteSpace(clientMessage) && clientMessage.StartsWith("JOIN"))
                     {
-                        byte[] data = Encoding.ASCII.GetBytes("Room is full.");
-                        stream.Write(data, 0, data.Length);
-                        //client.Close();
+                        roomName = clientMessage.Split(' ')[1];
+                        if (string.IsNullOrWhiteSpace(roomName))
+                        {
+                            string errorMessage = "Room name cannot be empty. Please enter a valid room name.\n";
+                            byte[] errorData = Encoding.ASCII.GetBytes(errorMessage);
+                            stream.Write(errorData, 0, errorData.Length);
+                        }
                     }
                 }
             }
+            catch(IOException ex)
+            {
+                Console.WriteLine($"Client disconnected or encountered error: {ex.Message}");
+            }
+
+            return roomName;
         }
     }
 }

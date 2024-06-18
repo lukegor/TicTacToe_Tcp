@@ -15,6 +15,7 @@ namespace test
         private int playerCount = 0;
         private char[,] board = new char[3, 3];
         private int currentPlayer = 0;
+        public bool gameEnded = false;
 
         public int PlayerCount => playerCount;
 
@@ -40,6 +41,7 @@ namespace test
 
         private void StartGame()
         {
+            gameEnded = false;
             Thread gameThread = new Thread(() => GameLoop());
             gameThread.Start();
         }
@@ -47,7 +49,6 @@ namespace test
         private void GameLoop()
         {
             InitializeBoard();
-            bool gameEnded = false;
 
             while (!gameEnded)
             {
@@ -89,12 +90,14 @@ namespace test
                         if (CheckWin())
                         {
                             SendMessage($"Player {currentPlayer + 1} wins!");
+                            gameEnded = true;
                             break;
                         }
 
                         if (CheckDraw())
                         {
                             SendMessage("It's a draw!");
+                            gameEnded = true;
                             break;
                         }
 
@@ -103,14 +106,17 @@ namespace test
                 }
                 if (CheckWin() || CheckDraw())
                 {
+                    gameEnded = true;
                     break;
                 }
             }
 
             CloseConnections();
             playerCount = 0;
+            gameEnded = false;
         }
 
+        #region GameLogic/GameMaintenance
         private void InitializeBoard()
         {
             for (int i = 0; i < 3; i++)
@@ -184,6 +190,7 @@ namespace test
             }
             SendMessage(sb.ToString());
         }
+        #endregion
 
         private void SendMessage(string message)
         {
@@ -212,7 +219,7 @@ namespace test
             int otherPlayer = 1 - disconnectingPlayer;
             if (streams[otherPlayer] != null)
             {
-                byte[] data = Encoding.ASCII.GetBytes("Player disconnected. You win by walkover.");
+                byte[] data = Encoding.ASCII.GetBytes("Opponent disconnected. You win by walkover.");
                 streams[otherPlayer].Write(data, 0, data.Length);
             }
         }
