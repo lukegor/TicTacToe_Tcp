@@ -2,7 +2,7 @@
 using System.Net;
 using System.Text;
 
-namespace test
+namespace TicTacToe_Tcp
 {
     internal class Program
     {
@@ -13,10 +13,12 @@ namespace test
 
             if (choice == "S")
             {
+                // Uruchomienie serwera
                 StartServer();
             }
             else if (choice == "C")
             {
+                // Uruchomienie klienta
                 StartClient();
             }
             else
@@ -25,6 +27,9 @@ namespace test
             }
         }
 
+        /// <summary>
+        /// Metoda uruchamiająca serwer
+        /// </summary>
         private static void StartServer()
         {
             Console.Write("Enter the port number to listen on: ");
@@ -34,10 +39,15 @@ namespace test
                 Console.WriteLine("Invalid port number. Please enter a valid port number:");
             }
 
+            // utworzenie instancji serwera
             Server server = new Server(port);
+            // rozpoczęcie nasłuchiwania przez server
             server.Start();
         }
 
+        /// <summary>
+        /// Metoda uruchamiająca klienta
+        /// </summary>
         private static void StartClient()
         {
             Console.WriteLine("Do you want to use the default hostname (localhost)? (Y/N)");
@@ -46,7 +56,7 @@ namespace test
             string hostname;
             if (useDefault == "Y")
             {
-                hostname = "localhost"; // Default hostname is localhost
+                hostname = "localhost"; // domyślny hostname to localhost
             }
             else
             {
@@ -56,10 +66,16 @@ namespace test
 
             int port = GetPortNumber();
 
+            // Utworzenie instancji klienta i rozpoczęcie jego działania (próba dołączenia do pokoju)
             Client client = new Client(hostname, port);
+            // Rozpoczęcie połączenia przez klienta
             client.Start();
         }
 
+        /// <summary>
+        /// Metoda pobierająca numer portu od użytkownika i validująca go
+        /// </summary>
+        /// <returns></returns>
         private static int GetPortNumber()
         {
             Console.WriteLine("Enter the port number to connect:");

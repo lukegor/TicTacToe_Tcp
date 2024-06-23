@@ -5,18 +5,29 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace test
+namespace TicTacToe_Tcp
 {
+    /// <summary>
+    /// Klasa reprezentująca pokój gry (room) "kółko i krzyżyk"
+    /// </summary>
     public sealed class Room
     {
+        // nazwa pokoju
         public string Name { get; private set; }
+        // gracze (klienci)
         private TcpClient[] players = new TcpClient[2];
+        // strumienie do komunikacji z graczami
         private NetworkStream[] streams = new NetworkStream[2];
+        // liczba graczy aktualnie w pokoju
         private int playerCount = 0;
+        // aktualny stan planszy do gry w kółko i krzyżyk
         private char[,] board = new char[3, 3];
+        // indeks gracza, który ma teraz ruch (0 lub 1)
         private int currentPlayer = 0;
+        // flaga wskazująca "czy gra się skończyła"
         public bool gameEnded = false;
 
+        // getter liczby graczy
         public int PlayerCount => playerCount;
 
         public Room(string name)
@@ -24,6 +35,11 @@ namespace test
             Name = name;
         }
 
+        /// <summary>
+        /// Metoda dodająca gracza do pokoju, jeśli pokój jest pełny rozpoczyna grę
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="stream"></param>
         public void AddPlayer(TcpClient client, NetworkStream stream)
         {
             if (playerCount < 2)
@@ -32,6 +48,7 @@ namespace test
                 streams[playerCount] = stream;
                 playerCount++;
 
+                // jeśli pokój jest pełny, rozpoczyna się gra
                 if (playerCount == 2)
                 {
                     StartGame();
@@ -39,29 +56,43 @@ namespace test
             }
         }
 
+        /// <summary>
+        /// Metoda rozpoczynająca grę
+        /// </summary>
         private void StartGame()
         {
             gameEnded = false;
+
+            // utworzenie nowego wątku dla gry
             Thread gameThread = new Thread(() => GameLoop());
+            // rozpoczęcie wątku gry
             gameThread.Start();
         }
 
+        /// <summary>
+        /// Pętla gry
+        /// </summary>
         private void GameLoop()
         {
+            // inicjalizacja planszy
             InitializeBoard();
 
             while (!gameEnded)
             {
+                // powiadomienie obecnego gracza o jego turze
                 SendMessage("Your turn", streams[currentPlayer]);
+                // powiadomienie drugiego gracza o turze obecnego gracza
                 SendMessage("Opponent's turn", streams[1 - currentPlayer]);
                 bool validMove = false;
 
                 while (!validMove)
                 {
+                    // bufor do przechowywania danych odebranych od gracza
                     byte[] buffer = new byte[1024];
                     int bytesRead;
                     try
                     {
+                        // oddczytanie danych od obecnego gracza
                         bytesRead = streams[currentPlayer].Read(buffer, 0, buffer.Length);
                     }
                     catch
@@ -77,8 +108,11 @@ namespace test
                         gameEnded = true;
                         break;
                     }
+
+                    // konwersja odebranych bajtów na ciąg znaków, reprezentujący ruch gracza
                     string move = Encoding.ASCII.GetString(buffer, 0, bytesRead).Trim();
 
+                    // przetwarzanie ruchu gracza
                     validMove = ProcessMove(move, currentPlayer);
                     if (!validMove)
                     {
@@ -86,7 +120,10 @@ namespace test
                     }
                     else
                     {
+                        // wyświetlenie planszy
                         DisplayBoard();
+
+                        // sprawdzenie warunków kończących grę, jak zwycięstwo i remis
                         if (CheckWin())
                         {
                             SendMessage($"Player {currentPlayer + 1} wins!");
@@ -111,12 +148,16 @@ namespace test
                 }
             }
 
+            // zamknięcie połączeń po zakończeniu gry
             CloseConnections();
             playerCount = 0;
             gameEnded = false;
         }
 
         #region GameLogic/GameMaintenance
+        /// <summary>
+        /// Metoda inicjalizująca planszę
+        /// </summary>
         private void InitializeBoard()
         {
             for (int i = 0; i < 3; i++)
@@ -124,6 +165,12 @@ namespace test
                     board[i, j] = ' ';
         }
 
+        /// <summary>
+        /// Metoda przetwarzająca ruch gracza
+        /// </summary>
+        /// <param name="move"></param>
+        /// <param name="player"></param>
+        /// <returns></returns>
         private bool ProcessMove(string move, int player)
         {
             int row, col;
@@ -145,6 +192,10 @@ namespace test
             return true;
         }
 
+        /// <summary>
+        /// Metoda sprawdzająca wygraną
+        /// </summary>
+        /// <returns></returns>
         private bool CheckWin()
         {
             for (int i = 0; i < 3; i++)
@@ -165,6 +216,10 @@ namespace test
             return false;
         }
 
+        /// <summary>
+        /// Metoda sprawdzająca remis
+        /// </summary>
+        /// <returns></returns>
         private bool CheckDraw()
         {
             foreach (char cell in board)
@@ -175,6 +230,9 @@ namespace test
             return true;
         }
 
+        /// <summary>
+        /// Metoda wyświetlająca planszę
+        /// </summary>
         private void DisplayBoard()
         {
             StringBuilder sb = new StringBuilder();
@@ -192,6 +250,10 @@ namespace test
         }
         #endregion
 
+        /// <summary>
+        /// Metoda wysyłająca wiadomość do wszystkich graczy w pokoju
+        /// </summary>
+        /// <param name="message"></param>
         private void SendMessage(string message)
         {
             foreach (var stream in streams)
@@ -200,8 +262,14 @@ namespace test
             }
         }
 
+        /// <summary>
+        /// Metoda wysyłająca wiadomość do konkretnego gracza w pokoju
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="stream"></param>
         private void SendMessage(string message, NetworkStream stream)
         {
+            // konwersja wiadomości do wysłania na tablicę bajtów
             byte[] data = Encoding.ASCII.GetBytes(message);
 
             try
@@ -214,16 +282,24 @@ namespace test
             }
         }
 
+        /// <summary>
+        /// Metoda informująca o walkowerze
+        /// </summary>
+        /// <param name="disconnectingPlayer"></param>
         private void NotifyWalkover(int disconnectingPlayer)
         {
             int otherPlayer = 1 - disconnectingPlayer;
             if (streams[otherPlayer] != null)
             {
+                // konwersja wiadomości do wysłania na tablicę bajtów
                 byte[] data = Encoding.ASCII.GetBytes("Opponent disconnected. You win by walkover.");
                 streams[otherPlayer].Write(data, 0, data.Length);
             }
         }
 
+        /// <summary>
+        /// Metoda zamykająca połączenia
+        /// </summary>
         private void CloseConnections()
         {
             foreach (var client in players)

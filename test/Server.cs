@@ -6,12 +6,17 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace test
+namespace TicTacToe_Tcp
 {
+    /// <summary>
+    /// Klasa reprezentująca serwer
+    /// </summary>
     internal sealed class Server
     {
+        // numer portu, na którym serwer będzie nasłuchiwać
         private readonly int port;
         private TcpListener tcpListener;
+        // lista pokoi
         private List<Room> rooms;
 
         public Server(int port)
@@ -20,27 +25,40 @@ namespace test
             rooms = new List<Room>();
         }
 
+        /// <summary>
+        /// Metoda rozpoczynająca działanie serwera
+        /// </summary>
         public void Start()
         {
             tcpListener = new TcpListener(IPAddress.Any, port);
+            // rozpoczęcie nasłuchiwania
             tcpListener.Start();
             Console.WriteLine($"Server started on port {port}...");
 
+            // pętla do akceptowania kolejnych klientów
             while (true)
             {
+                // akceptacja nowego klienta
                 TcpClient client = tcpListener.AcceptTcpClient();
                 Console.WriteLine("Client connected...");
 
+                // utworzenie i uruchomienie wątku do obsługi klienta
                 Thread thread = new Thread(() => HandleClient(client));
                 thread.Start();
             }
         }
 
+        /// <summary>
+        /// Metoda obsługująca połączenie z klientem
+        /// </summary>
+        /// <param name="client"></param>
         private void HandleClient(TcpClient client)
         {
             NetworkStream stream = client.GetStream();
 
+            // walidacja i pobranie nazwy pokoju od klienta
             string roomName = ValidateRoomName(stream);
+
             lock (rooms)
             {
                 Room room = rooms.Find(r => r.Name == roomName);
@@ -67,8 +85,14 @@ namespace test
             }
         }
 
+        /// <summary>
+        /// Metoda walidująca nazwę pokoju
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <returns></returns>
         private string ValidateRoomName(NetworkStream stream)
         {
+            // bufor do przechowywania danych przyjętych od użytkownika
             byte[] buffer = new byte[1024];
             string roomName = string.Empty;
 

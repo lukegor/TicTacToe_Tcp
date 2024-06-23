@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34902.65
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "client-server-tictactoe-console", "test\client-server-tictactoe-console.csproj", "{7DC71544-1DF1-4054-9F87-D861E4612B69}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TicTacToe_Tcp", "test\TicTacToe_Tcp.csproj", "{7DC71544-1DF1-4054-9F87-D861E4612B69}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
