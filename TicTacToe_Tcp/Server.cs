@@ -15,6 +15,7 @@ namespace TicTacToe_Tcp
     {
         // numer portu, na którym serwer będzie nasłuchiwać
         private readonly int port;
+        // monitoruje wybrany port i może przyjmować klientów TCP
         private TcpListener tcpListener;
         // lista pokoi
         private List<Room> rooms;
@@ -71,16 +72,11 @@ namespace TicTacToe_Tcp
                 if (room.PlayerCount < 2 || room.PlayerCount == 0)
                 {
                     room.AddPlayer(client, stream);
-                    if (room.PlayerCount == 0)
-                    {
-                        rooms.Remove(room);
-                    }
                 }
                 else
                 {
                     byte[] data = Encoding.ASCII.GetBytes("Room is full.");
                     stream.Write(data, 0, data.Length);
-                    //client.Close();
                 }
             }
         }
