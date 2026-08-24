@@ -49,6 +49,8 @@ public sealed class FakeServerTransport : IServerTransport
     public IReadOnlyList<string> Inbox(Guid id) =>
         _inboxes.GetValueOrDefault(id, []);
 
+    public void ClearInbox(Guid id) => _inboxes[id].Clear();
+
     private void Deliver(Guid id, string message)
     {
         if (!_inboxes.TryGetValue(id, out List<string>? list))
