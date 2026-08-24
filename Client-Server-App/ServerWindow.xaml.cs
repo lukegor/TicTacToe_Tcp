@@ -14,7 +14,7 @@ public partial class ServerWindow : Window
         _lobby = lobby;
         InitializeComponent();
         Title = $"Referee — port {port}";
-        lobby.LogReceived += message => Dispatcher.BeginInvoke(AppendLog);
+        lobby.LogReceived += message => Dispatcher.BeginInvoke(() => AppendLog(message));
         lobby.RoomsChanged += () => Dispatcher.BeginInvoke(RenderRooms);
         RenderRooms();
     }
