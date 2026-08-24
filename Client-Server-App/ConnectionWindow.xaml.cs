@@ -37,8 +37,6 @@ public partial class ConnectionWindow : Window
 
         _client?.Dispose();
         ClientTcp client = new();
-        client.MessageReceived += message => AppendLog($"[server] {message}");
-        client.Disconnected += () => AppendLog("Disconnected from the server.");
         _client = client;
         ConnectButton.IsEnabled = false;
         try
@@ -46,13 +44,30 @@ public partial class ConnectionWindow : Window
             await client.ConnectAsync(host, port);
             AppendLog($"Connected to {host}:{port}.");
 
-            TicTacToeClientService clientService = new(client);
-            clientService.Start();
-            OpenGameWindow(
-                () => new GameWindow(clientService),
+            // First factory call reuses the already-connected socket; later calls
+            // (reconnects) open fresh ones.
+            ClientTcp? initialTransport = client;
+            async Task<IClientTransport> ConnectFactory()
+            {
+                ClientTcp? transport = Interlocked.Exchange(ref initialTransport, null);
+                if (transport is not null)
+                {
+                    return transport;
+                }
+
+                ClientTcp fresh = new();
+                await fresh.ConnectAsync(host, port);
+                return fresh;
+            }
+
+            PlayerSession session = new(ConnectFactory);
+            await session.ConnectAsync();
+
+            OpenLobbyWindow(
+                () => new LobbyWindow(session),
                 onClose: () =>
                 {
-                    client.Dispose();
+                    session.Dispose();
                     if (ReferenceEquals(_client, client))
                     {
                         _client = null;
@@ -72,6 +87,14 @@ public partial class ConnectionWindow : Window
         {
             ConnectButton.IsEnabled = true;
         }
+    }
+
+    private void OpenLobbyWindow(Func<LobbyWindow> createWindow, Action onClose)
+    {
+        LobbyWindow window = createWindow();
+        window.Owner = this;
+        window.Closed += (_, _) => onClose();
+        window.Show();
     }
 
     private void HostButton_Click(object sender, RoutedEventArgs e)
@@ -117,14 +140,6 @@ public partial class ConnectionWindow : Window
         window.Owner = this;
         window.Closed += (_, _) => onClose();
         window.Show();
-    }
-
-    private void OpenGameWindow(Func<GameWindow> createWindow, Action onClose)
-    {
-        GameWindow gameWindow = createWindow();
-        gameWindow.Owner = this;
-        gameWindow.Closed += (_, _) => onClose();
-        gameWindow.Show();
     }
 
     private static bool TryParsePort(string text, out int port)

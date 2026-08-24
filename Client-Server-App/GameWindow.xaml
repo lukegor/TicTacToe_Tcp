@@ -11,7 +11,7 @@
 			<RowDefinition Height="Auto" />
 			<RowDefinition Height="*" />
 			<RowDefinition Height="Auto" />
-			<RowDefinition Height="130" />
+			<RowDefinition Height="110" />
 		</Grid.RowDefinitions>
 
 		<TextBlock x:Name="StatusText"
@@ -20,21 +20,27 @@
 				   FontWeight="Bold"
 				   TextAlignment="Center"
 				   Margin="0,0,0,8"
-				   Text="Waiting for opponent..." />
+				   Text="Joining..." />
 
 		<UniformGrid x:Name="BoardGrid"
 					 Grid.Row="1"
 					 Rows="3"
 					 Columns="3" />
 
-		<Button x:Name="RematchButton"
-				Grid.Row="2"
-				Content="Offer Rematch"
-				Width="150"
-				Height="30"
-				Margin="0,8"
-				IsEnabled="False"
-				Click="RematchButton_Click" />
+		<StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,8">
+			<Button x:Name="RematchButton"
+					Content="Offer Rematch"
+					Width="130"
+					Height="30"
+					Margin="0,0,10,0"
+					IsEnabled="False"
+					Click="RematchButton_Click" />
+			<Button x:Name="LeaveButton"
+					Content="Leave"
+					Width="90"
+					Height="30"
+					Click="LeaveButton_Click" />
+		</StackPanel>
 
 		<TextBox x:Name="OutputTextBox"
 				 Grid.Row="3"
