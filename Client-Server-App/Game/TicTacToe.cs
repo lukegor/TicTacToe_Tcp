@@ -61,6 +61,19 @@ internal sealed class TicTacToe
         WinningLine = null;
     }
 
+    /// <summary>Awards the game to <paramref name="winner"/> (disconnect grace expiry).</summary>
+    public void DeclareForfeit(Player winner)
+    {
+        if (Status != GameStatus.InProgress)
+        {
+            return;
+        }
+
+        Status = GameStatus.Won;
+        Winner = winner;
+        WinningLine = null;
+    }
+
     private void FinishOrAdvance()
     {
         foreach (int[] line in WinningLines)
