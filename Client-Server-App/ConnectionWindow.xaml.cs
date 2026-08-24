@@ -84,19 +84,19 @@ public partial class ConnectionWindow : Window
 
         _server?.Dispose();
         ServerTcp server = new(port);
-        server.MessageReceived += message => AppendLog($"[client] {message}");
         try
         {
             server.Start();
             _server = server;
             AppendLog($"Listening on port {port}.");
 
-            TicTacToeHostService hostService = new(server);
-            hostService.Start();
-            OpenGameWindow(
-                () => new GameWindow(hostService),
+            LobbyService lobby = new(server);
+            lobby.Start();
+            OpenRefereeWindow(
+                () => new ServerWindow(lobby, port),
                 onClose: () =>
                 {
+                    lobby.Dispose();
                     server.Dispose();
                     if (ReferenceEquals(_server, server))
                     {
@@ -109,6 +109,14 @@ public partial class ConnectionWindow : Window
             AppendLog($"Could not start the host: {ex.Message}");
             server.Dispose();
         }
+    }
+
+    private void OpenRefereeWindow(Func<ServerWindow> createWindow, Action onClose)
+    {
+        ServerWindow window = createWindow();
+        window.Owner = this;
+        window.Closed += (_, _) => onClose();
+        window.Show();
     }
 
     private void OpenGameWindow(Func<GameWindow> createWindow, Action onClose)

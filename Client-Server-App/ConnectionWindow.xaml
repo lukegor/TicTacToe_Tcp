@@ -3,32 +3,50 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Client_Server_App"
         mc:Ignorable="d"
-        Title="ConnectionWindow" Height="253" Width="500">
-	<Grid>
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="*" />
-			<ColumnDefinition Width="*" />
-		</Grid.ColumnDefinitions>
+        Title="Connection" Height="420" Width="560"
+        WindowStartupLocation="CenterScreen">
+	<Grid Margin="12">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="*" />
+		</Grid.RowDefinitions>
 
-		<!-- Connect Section -->
-		<StackPanel Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">
-			<TextBlock Text="Connect" FontWeight="Bold" Margin="0,0,0,10" />
-			<TextBlock Text="IP Address:" Margin="0,0,0,5" />
-			<TextBox Width="200" Margin="0,0,0,10" />
-			<TextBlock Text="Port:" Margin="0,0,0,5" />
-			<TextBox Width="200" Margin="0,0,0,10" />
-			<Button Content="Connect" Width="100" Margin="0,0,0,10" Click="Button_Click"/>
-			<Button Content="Test Connection" Width="100" />
-		</StackPanel>
+		<!-- Connect / Host panels -->
+		<Grid Grid.Row="0">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="*" />
+			</Grid.ColumnDefinitions>
 
-		<!-- Create Section -->
-		<StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-			<TextBlock Text="Create" FontWeight="Bold" Margin="0,0,0,10" />
-			<TextBlock Text="Port:" Margin="0,0,0,5" />
-			<TextBox Width="200" Margin="0,0,0,10" />
-			<Button Content="Create Host" Width="100" Click="HostButton_Click" />
-		</StackPanel>
+			<!-- Connect Section -->
+			<StackPanel Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Top">
+				<TextBlock Text="Connect" FontWeight="Bold" Margin="0,0,0,10" />
+				<TextBlock Text="IP Address:" Margin="0,0,0,5" />
+				<TextBox x:Name="AddressTextBox" Width="200" Margin="0,0,0,10" Text="127.0.0.1" />
+				<TextBlock Text="Port:" Margin="0,0,0,5" />
+				<TextBox x:Name="PortTextBox" Width="200" Margin="0,0,0,10" Text="1111" />
+				<Button x:Name="ConnectButton" Content="Connect" Width="100" Click="ConnectButton_Click" />
+			</StackPanel>
+
+			<!-- Host Section -->
+			<StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Top">
+				<TextBlock Text="Host" FontWeight="Bold" Margin="0,0,0,10" />
+				<TextBlock Text="Port:" Margin="0,0,0,5" />
+				<TextBox x:Name="HostPortTextBox" Width="200" Margin="0,0,0,10" Text="1111" />
+				<Button x:Name="HostButton" Content="Create Host" Width="100" Click="HostButton_Click" />
+			</StackPanel>
+		</Grid>
+
+		<!-- Message log -->
+		<TextBox x:Name="OutputTextBox"
+				 Grid.Row="1"
+				 Margin="0,12,0,0"
+				 IsReadOnly="True"
+				 IsReadOnlyCaretVisible="False"
+				 FontFamily="Consolas"
+				 TextWrapping="Wrap"
+				 VerticalScrollBarVisibility="Auto"
+				 VerticalContentAlignment="Top" />
 	</Grid>
 </Window>

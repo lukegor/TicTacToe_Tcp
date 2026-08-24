@@ -1,0 +1,19 @@
+# Version control
+.git
+.gitattributes
+.gitignore
+
+# IDE state
+.vs/
+.idea/
+*.user
+*.suo
+
+# Build output
+**/bin/
+**/obj/
+
+# Docs and Docker context itself
+*.md
+Dockerfile*
+.dockerignore

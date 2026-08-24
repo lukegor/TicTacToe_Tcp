@@ -1,0 +1,39 @@
+<Window x:Class="Client_Server_App.ServerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Referee" Height="420" Width="520"
+        ResizeMode="NoResize" WindowStartupLocation="CenterOwner">
+	<Grid Margin="12">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="*" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="150" />
+		</Grid.RowDefinitions>
+
+		<Grid Grid.Row="0" Margin="0,0,0,4">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="90" />
+				<ColumnDefinition Width="100" />
+			</Grid.ColumnDefinitions>
+			<TextBlock Text="Room" FontWeight="Bold" />
+			<TextBlock Grid.Column="1" FontWeight="Bold" Text="Players" />
+			<TextBlock Grid.Column="2" FontWeight="Bold" Text="Spectators" />
+		</Grid>
+
+		<StackPanel x:Name="RoomsPanel" Grid.Row="1" />
+
+		<TextBlock Grid.Row="2" Text="Events" FontWeight="Bold" Margin="0,8,0,4" />
+
+		<TextBox x:Name="OutputTextBox"
+				 Grid.Row="3"
+				 IsReadOnly="True"
+				 FontFamily="Consolas"
+				 TextWrapping="Wrap"
+				 VerticalScrollBarVisibility="Auto" />
+	</Grid>
+</Window>

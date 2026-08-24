@@ -13,25 +13,11 @@ namespace Client_Server_App;
 public partial class GameWindow : Window
 {
     private readonly Button[] _cells = new Button[9];
-    private readonly TicTacToeHostService? _host;
     private readonly TicTacToeClientService? _client;
     private readonly Brush _defaultCellBackground = Brushes.White;
     private GameStateRecord? _renderedState;
     private bool _rematchOfferedLocally;
     private bool _opponentLeft;
-
-    internal GameWindow(TicTacToeHostService host)
-    {
-        _host = host;
-        InitializeComponent();
-        CreateCells();
-        host.StateChanged += OnStateChanged;
-        host.LogReceived += message => AppendLog(message);
-        host.RematchRequested += OnRematchRequested;
-        host.OpponentDisconnected += OnOpponentDisconnected;
-        Title = "Tic-Tac-Toe (Host)";
-        Render(host.CurrentState);
-    }
 
     internal GameWindow(TicTacToeClientService client)
     {
@@ -80,11 +66,7 @@ public partial class GameWindow : Window
         int cell = (int)((Button)sender).Tag!;
         try
         {
-            if (_host is not null)
-            {
-                await _host.PlayMoveAsync(cell);
-            }
-            else if (_client is not null)
+            if (_client is not null)
             {
                 await _client.PlayCellAsync(cell);
             }
@@ -101,11 +83,7 @@ public partial class GameWindow : Window
         RefreshRematchButton();
         try
         {
-            if (_host is not null)
-            {
-                await _host.RequestRematchAsync();
-            }
-            else if (_client is not null)
+            if (_client is not null)
             {
                 await _client.SendRematchOfferAsync();
             }
@@ -192,20 +170,13 @@ public partial class GameWindow : Window
         RematchButton.Content = _rematchOfferedLocally ? "Rematch offered..." : "Offer Rematch";
     }
 
-    private string MyMark(int round) => _host is not null ? GameRoles.HostMark(round) : GameRoles.ClientMark(round);
+    private string MyMark(int round) => GameRoles.ClientMark(round);
 
     private void AppendLog(string message) =>
         OutputTextBox.AppendText(message + Environment.NewLine);
 
     protected override void OnClosed(EventArgs e)
     {
-        if (_host is not null)
-        {
-            _host.StateChanged -= OnStateChanged;
-            _host.RematchRequested -= OnRematchRequested;
-            _host.OpponentDisconnected -= OnOpponentDisconnected;
-        }
-
         if (_client is not null)
         {
             _client.StateChanged -= OnStateChanged;

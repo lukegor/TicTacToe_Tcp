@@ -1,5 +1,4 @@
 using Client_Server_App;
-using Client_Server_App.Game;
 using Xunit;
 
 namespace Client_Server_App.Tests.Integration;
@@ -7,43 +6,65 @@ namespace Client_Server_App.Tests.Integration;
 public sealed class ServerTcpConnectionEventsTests
 {
     [Fact]
-    public async Task ClientLifecycle_RaisesConnectedThenDisconnected()
+    public async Task ClientLifecycle_RaisesIdentityEvents()
     {
         using ServerTcp server = new(0);
-        TaskCompletionSource connected = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        TaskCompletionSource disconnected = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        server.ClientConnected += () => connected.TrySetResult();
-        server.ClientDisconnected += () => disconnected.TrySetResult();
+        TaskCompletionSource<Guid> connected = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<Guid> disconnected = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Guid? registeredId = null;
+        server.ClientConnected += id =>
+        {
+            registeredId = id;
+            connected.TrySetResult(id);
+        };
+        server.ClientDisconnected += id => disconnected.TrySetResult(id);
 
         server.Start();
         Assert.True(server.Port > 0);
 
         using ClientTcp client = new();
         await client.ConnectAsync("127.0.0.1", server.Port);
-        await connected.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Guid serverSideId = await connected.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.NotEqual(Guid.Empty, serverSideId);
+        Assert.Equal(serverSideId, registeredId);
 
         client.Dispose();
-        await disconnected.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Equal(serverSideId, await disconnected.Task.WaitAsync(TimeSpan.FromSeconds(5)));
     }
 
     [Fact]
-    public async Task Broadcast_ReachesConnectedClient()
+    public async Task SendTo_ReachesExactlyOneClient()
     {
         using ServerTcp server = new(0);
-        TaskCompletionSource connected = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        server.ClientConnected += () => connected.TrySetResult();
+        TaskCompletionSource<Guid> firstConnected = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<Guid> secondConnected = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        int arrivals = 0;
+        server.ClientConnected += id =>
+        {
+            arrivals++;
+            _ = arrivals == 1
+                ? firstConnected.TrySetResult(id)
+                : secondConnected.TrySetResult(id);
+        };
+
         server.Start();
 
-        using ClientTcp client = new();
-        TaskCompletionSource<string> received = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        client.MessageReceived += line => received.TrySetResult(line);
+        using ClientTcp first = new();
+        TaskCompletionSource<string> firstReceived = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        first.MessageReceived += line => firstReceived.TrySetResult(line);
+        await first.ConnectAsync("127.0.0.1", server.Port);
+        Guid firstId = await firstConnected.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
-        await client.ConnectAsync("127.0.0.1", server.Port);
-        // ClientConnected fires after the writer is registered, so a subsequent
-        // broadcast is guaranteed to reach the client.
-        await connected.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        using ClientTcp second = new();
+        int secondSeen = 0;
+        second.MessageReceived += _ => secondSeen++;
+        await second.ConnectAsync("127.0.0.1", server.Port);
+        _ = await secondConnected.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
-        await server.BroadcastLineAsync("ping");
-        Assert.Equal("ping", await received.Task.WaitAsync(TimeSpan.FromSeconds(5)));
+        await server.SendToAsync(firstId, "just-you");
+
+        Assert.Equal("just-you", await firstReceived.Task.WaitAsync(TimeSpan.FromSeconds(5)));
+        await Task.Delay(200);
+        Assert.Equal(0, secondSeen);
     }
 }

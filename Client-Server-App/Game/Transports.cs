@@ -1,16 +1,17 @@
 namespace Client_Server_App.Game;
 
-/// <summary>The host-side view of the server transport.</summary>
+/// <summary>The referee-side view of the server transport: identity-aware pipes.</summary>
 internal interface IServerTransport
 {
-    event Action<string>? MessageReceived;
-    event Action? ClientConnected;
-    event Action? ClientDisconnected;
+    event Action<Guid>? ClientConnected;
+    event Action<Guid>? ClientDisconnected;
+    event Action<Guid, string>? MessageReceived;
 
     Task BroadcastLineAsync(string message, CancellationToken cancellationToken = default);
+    Task SendToAsync(Guid id, string message, CancellationToken cancellationToken = default);
 }
 
-/// <summary>The client-side view of the client transport.</summary>
+/// <summary>The client-side view of the client transport (unchanged).</summary>
 internal interface IClientTransport
 {
     event Action<string>? MessageReceived;
