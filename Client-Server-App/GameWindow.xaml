@@ -1,0 +1,47 @@
+<Window x:Class="Client_Server_App.GameWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Tic-Tac-Toe" Height="520" Width="420"
+        ResizeMode="NoResize" WindowStartupLocation="CenterOwner">
+	<Grid Margin="12">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="*" />
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="130" />
+		</Grid.RowDefinitions>
+
+		<TextBlock x:Name="StatusText"
+				   Grid.Row="0"
+				   FontSize="16"
+				   FontWeight="Bold"
+				   TextAlignment="Center"
+				   Margin="0,0,0,8"
+				   Text="Waiting for opponent..." />
+
+		<UniformGrid x:Name="BoardGrid"
+					 Grid.Row="1"
+					 Rows="3"
+					 Columns="3" />
+
+		<Button x:Name="RematchButton"
+				Grid.Row="2"
+				Content="Offer Rematch"
+				Width="150"
+				Height="30"
+				Margin="0,8"
+				IsEnabled="False"
+				Click="RematchButton_Click" />
+
+		<TextBox x:Name="OutputTextBox"
+				 Grid.Row="3"
+				 Margin="0,8,0,0"
+				 IsReadOnly="True"
+				 FontFamily="Consolas"
+				 TextWrapping="Wrap"
+				 VerticalScrollBarVisibility="Auto" />
+	</Grid>
+</Window>
