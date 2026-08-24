@@ -11,11 +11,21 @@ internal interface IServerTransport
     Task SendToAsync(Guid id, string message, CancellationToken cancellationToken = default);
 }
 
-/// <summary>The client-side view of the client transport (unchanged).</summary>
+/// <summary>The client-side view of the client transport.</summary>
 internal interface IClientTransport
 {
     event Action<string>? MessageReceived;
     event Action? Disconnected;
 
     Task SendLineAsync(string message, CancellationToken cancellationToken = default);
+}
+
+/// <summary>Lifecycle phases of a client-side <see cref="PlayerSession"/>.</summary>
+public enum PlayerSessionState
+{
+    Connecting,
+    Lobby,
+    Seated,
+    Reconnecting,
+    Disconnected,
 }
