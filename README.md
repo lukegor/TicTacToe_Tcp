@@ -1,17 +1,21 @@
 # Client-Server-App
 
-A minimal WPF application that demonstrates newline-delimited TCP messaging between a
-client and a server. The connection dialog can act as either side:
+A minimal WPF application that demonstrates room-based tic-tac-toe over TCP:
+a neutral referee server hosts named two-player rooms with spectators, and
+client instances browse a live lobby to create or join a game.
 
-- **Connect** – connect to a host/port and play tic-tac-toe (or read chat text).
-- **Host** – listen on a port; acts as the authoritative tic-tac-toe referee and
-  broadcasts every board update to all connected clients.
+- **Connect** – join as a player: browse rooms, create one, or join as player/spectator.
+- **Host** – run the referee: a neutral lobby that owns rooms and never plays.
 
 ## Playing
 
-Start two instances. In the first click **Create Host**; in the second fill in
-the host's IP/port and click **Connect**. The host plays X and moves first;
-marks swap after each rematch.
+Start three instances. Instance one clicks **Create Host** (a referee window
+appears). Instances two and three click **Connect**, then create or join a room
+in the lobby. The first two players seat as X and O and the game starts
+automatically; further joiners watch as spectators. If a player's connection
+drops, they rejoin their seat automatically within a 10-second grace window —
+otherwise the opponent wins by forfeit. Closing the game window returns you to
+the lobby; **Leave** exits deliberately and forfeits an ongoing game.
 
 ## Requirements
 

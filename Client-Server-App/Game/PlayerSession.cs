@@ -11,11 +11,15 @@ internal sealed class PlayerSession : IDisposable
 {
     public static readonly TimeSpan DefaultReconnectBudget = TimeSpan.FromSeconds(15);
     private static readonly TimeSpan RetryInterval = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan SeatAckTimeout = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan ShedSettleDelay = TimeSpan.FromMilliseconds(200);
 
     private readonly Func<Task<IClientTransport>> _connectFactory;
     private readonly TimeSpan _reconnectBudget;
     private readonly CancellationTokenSource _disposal = new();
     private IClientTransport? _transport;
+    private bool _wasPlayerWhenDropped;
+    private int _seatAckVersion;
 
     public event Action<IReadOnlyList<RoomInfoRecord>>? RoomsUpdated;
     public event Action<JoinedRecord>? Seated;
@@ -114,6 +118,7 @@ internal sealed class PlayerSession : IDisposable
                 MyMark = joined.Mark;
                 CurrentState = joined.State;
                 State = PlayerSessionState.Seated;
+                _seatAckVersion++;
                 Seated?.Invoke(joined);
                 if (joined.Restored)
                 {
@@ -132,6 +137,11 @@ internal sealed class PlayerSession : IDisposable
                 break;
 
             case LeftRecord left:
+                if (State == PlayerSessionState.Reconnecting && left.Reason == "left")
+                {
+                    break; // echo of our own shed-leave; stay in the reconnect loop
+                }
+
                 ReturnToLobby(left.Reason);
                 break;
 
@@ -160,6 +170,7 @@ internal sealed class PlayerSession : IDisposable
 
     private void EnterReconnecting()
     {
+        _wasPlayerWhenDropped = MyMark is not null;
         State = PlayerSessionState.Reconnecting;
         ReconnectingStarted?.Invoke();
         LogReceived?.Invoke("Connection lost - rejoining...");
@@ -175,19 +186,28 @@ internal sealed class PlayerSession : IDisposable
             {
                 IClientTransport transport = await _connectFactory().ConfigureAwait(false);
                 AttachTransport(transport);
-                await transport.SendLineAsync(GameJson.Serialize(new JoinRoomRecord(CurrentRoomName!)), CancellationToken.None).ConfigureAwait(false);
-                return; // the joined acknowledgement completes the transition
+
+                // Only an ack confirming the intended seat settles the loop;
+                // a spectator mis-seat returns false and we retry.
+                bool settled = await SendJoinAndVerifyAsync(transport, cancellationToken).ConfigureAwait(false);
+                if (settled)
+                {
+                    _wasPlayerWhenDropped = false;
+                    return;
+                }
             }
             catch (Exception ex) when (ex is ObjectDisposedException or IOException or SocketException or InvalidOperationException)
             {
-                try
-                {
-                    await Task.Delay(RetryInterval, cancellationToken).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException)
-                {
-                    return;
-                }
+                // Connection or handshake failed; retry until the budget expires.
+            }
+
+            try
+            {
+                await Task.Delay(RetryInterval, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
             }
         }
 
@@ -196,8 +216,55 @@ internal sealed class PlayerSession : IDisposable
             return;
         }
 
-        ReturnToLobby("reconnectFailed");
+        // Announce the failure before transitioning so observers that poll the
+        // state never see the lobby without the accompanying error notice.
         ErrorReceived?.Invoke("Could not rejoin the room in time.");
+        ReturnToLobby("reconnectFailed");
+    }
+
+    /// <summary>
+    /// Sends <c>joinRoom</c> and waits for a FRESH seat acknowledgement (one that
+    /// arrives after this call — stale seating from a previous attempt is ignored).
+    /// A returning player who is seated as a spectator lost the ordering race
+    /// against the server's disconnect processing — sheds the seat, signals retry.
+    /// </summary>
+    private async Task<bool> SendJoinAndVerifyAsync(IClientTransport transport, CancellationToken cancellationToken)
+    {
+        int baseline = _seatAckVersion;
+        await transport.SendLineAsync(GameJson.Serialize(new JoinRoomRecord(CurrentRoomName!)), CancellationToken.None).ConfigureAwait(false);
+
+        DateTimeOffset deadline = DateTimeOffset.UtcNow + SeatAckTimeout;
+        while (DateTimeOffset.UtcNow < deadline && !cancellationToken.IsCancellationRequested)
+        {
+            bool freshAck = _seatAckVersion != baseline;
+            if (freshAck && State == PlayerSessionState.Seated)
+            {
+                if (_wasPlayerWhenDropped && MyMark is null)
+                {
+                    await transport.SendLineAsync(GameJson.Serialize(new LeaveRoomRecord()), CancellationToken.None).ConfigureAwait(false);
+                    await Task.Delay(ShedSettleDelay, cancellationToken).ConfigureAwait(false);
+                    return false;
+                }
+
+                return true;
+            }
+
+            if (State is PlayerSessionState.Lobby or PlayerSessionState.Disconnected)
+            {
+                return false;
+            }
+
+            try
+            {
+                await Task.Delay(50, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                return false;
+            }
+        }
+
+        return false;
     }
 
     private void ReturnToLobby(string reason)
