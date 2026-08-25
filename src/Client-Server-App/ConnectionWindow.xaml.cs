@@ -16,9 +16,17 @@ public partial class ConnectionWindow : Window
 {
     private ClientTcp? _client;
     private ServerTcp? _server;
+    private readonly Func<LobbyWindow, bool>? _lobbyProbe;
+    private readonly Func<ServerWindow, bool>? _refereeProbe;
 
-    public ConnectionWindow()
+    public ConnectionWindow() : this(null, null)
     {
+    }
+
+    internal ConnectionWindow(Func<LobbyWindow, bool>? lobbyProbe, Func<ServerWindow, bool>? refereeProbe)
+    {
+        _lobbyProbe = lobbyProbe;
+        _refereeProbe = refereeProbe;
         InitializeComponent();
     }
 
@@ -97,6 +105,12 @@ public partial class ConnectionWindow : Window
     private void OpenLobbyWindow(Func<LobbyWindow> createWindow, Action onClose)
     {
         LobbyWindow window = createWindow();
+        if (_lobbyProbe?.Invoke(window) == true)
+        {
+            window.Closed += (_, _) => onClose();
+            return;
+        }
+
         window.Owner = this;
         window.Closed += (_, _) => onClose();
         window.Show();
@@ -142,6 +156,12 @@ public partial class ConnectionWindow : Window
     private void OpenRefereeWindow(Func<ServerWindow> createWindow, Action onClose)
     {
         ServerWindow window = createWindow();
+        if (_refereeProbe?.Invoke(window) == true)
+        {
+            window.Closed += (_, _) => onClose();
+            return;
+        }
+
         window.Owner = this;
         window.Closed += (_, _) => onClose();
         window.Show();
