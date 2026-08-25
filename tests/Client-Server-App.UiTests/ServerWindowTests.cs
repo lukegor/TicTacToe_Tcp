@@ -49,6 +49,7 @@ public sealed class ServerWindowTests : IDisposable
         _transport.ReceiveLine(b, GameJson.Serialize(new JoinRoomRecord("duel")));
 
         ServerWindow window = HeadlessWindow.Prepare(new ServerWindow(_lobby, 1234));
+        window.Show(); // off-screen: activates bindings and item generation
         await TestDispatcher.FlushAsync();
 
         var rows = RowTexts(window);
@@ -60,6 +61,7 @@ public sealed class ServerWindowTests : IDisposable
     public async Task MembershipChange_RerendersRows()
     {
         ServerWindow window = HeadlessWindow.Prepare(new ServerWindow(_lobby, 1234));
+        window.Show(); // off-screen: activates bindings and item generation
         await TestDispatcher.FlushAsync();
         Assert.Empty(RowTexts(window));
 
@@ -78,6 +80,7 @@ public sealed class ServerWindowTests : IDisposable
     public async Task LogEvent_FromWorkerThread_AppendsToOutputBox()
     {
         ServerWindow window = HeadlessWindow.Prepare(new ServerWindow(_lobby, 1234));
+        window.Show(); // off-screen: activates bindings and item generation
         Guid a = _transport.SimulateClientConnected();
         Hello(_transport, a, "Alice"); // raises LogReceived off-thread
         await TestDispatcher.FlushAsync();
@@ -90,6 +93,7 @@ public sealed class ServerWindowTests : IDisposable
     public async Task EmptyLobby_RendersZeroRows_NoCrash()
     {
         ServerWindow window = HeadlessWindow.Prepare(new ServerWindow(_lobby, 1234));
+        window.Show(); // off-screen: activates bindings and item generation
         await TestDispatcher.FlushAsync();
 
         Assert.Empty(window.RoomsPanel.Items);

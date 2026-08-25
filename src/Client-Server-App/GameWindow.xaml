@@ -4,50 +4,64 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Tic-Tac-Toe" Height="520" Width="420"
+        Title="{Binding TitleText}" Height="560" Width="440"
         ResizeMode="NoResize" WindowStartupLocation="CenterOwner">
 	<Grid Margin="12">
 		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
 			<RowDefinition Height="Auto" />
 			<RowDefinition Height="*" />
 			<RowDefinition Height="Auto" />
 			<RowDefinition Height="110" />
 		</Grid.RowDefinitions>
 
-		<TextBlock x:Name="StatusText"
-				   Grid.Row="0"
-				   FontSize="16"
-				   FontWeight="Bold"
-				   TextAlignment="Center"
-				   Margin="0,0,0,8"
-				   Text="Joining..." />
+		<TextBlock x:Name="StatusText" Grid.Row="0" Text="{Binding StatusText}"
+		           FontWeight="Bold" TextWrapping="Wrap" Margin="0,0,0,10" />
 
-		<UniformGrid x:Name="BoardGrid"
-					 Grid.Row="1"
-					 Rows="3"
-					 Columns="3" />
+		<ItemsControl x:Name="BoardGrid" Grid.Row="1" ItemsSource="{Binding Cells}" Focusable="False">
+			<ItemsControl.ItemsPanel>
+				<ItemsPanelTemplate>
+					<UniformGrid Rows="3" Columns="3" />
+				</ItemsPanelTemplate>
+			</ItemsControl.ItemsPanel>
+			<ItemsControl.ItemTemplate>
+				<DataTemplate>
+					<Button FontSize="32" FontWeight="Bold" Margin="2"
+					        Content="{Binding Mark}"
+					        IsEnabled="{Binding IsEnabled}"
+					        Command="{Binding DataContext.MoveCommand,
+						          RelativeSource={RelativeSource AncestorType=Window}}"
+					        CommandParameter="{Binding CellIndex}">
+						<Button.Style>
+							<Style TargetType="Button">
+								<Setter Property="Background" Value="White" />
+								<Style.Triggers>
+									<DataTrigger Binding="{Binding IsHighlighted}" Value="True">
+										<Setter Property="Background" Value="LightGoldenrodYellow" />
+									</DataTrigger>
+								</Style.Triggers>
+							</Style>
+						</Button.Style>
+					</Button>
+				</DataTemplate>
+			</ItemsControl.ItemTemplate>
+		</ItemsControl>
 
-		<StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,8">
-			<Button x:Name="RematchButton"
-					Content="Offer Rematch"
-					Width="130"
-					Height="30"
-					Margin="0,0,10,0"
-					IsEnabled="False"
-					Click="RematchButton_Click" />
-			<Button x:Name="LeaveButton"
-					Content="Leave"
-					Width="90"
-					Height="30"
-					Click="LeaveButton_Click" />
-		</StackPanel>
+		<Button x:Name="RematchButton" Grid.Row="3" Content="{Binding RematchLabel}"
+		        IsEnabled="{Binding RematchEnabled}"
+		        Command="{Binding OfferRematchCommand}" Width="160" Margin="0,10,0,0" />
+
+		<Button x:Name="LeaveButton" Grid.Row="3" Content="Leave" Width="80"
+		        HorizontalAlignment="Right" Margin="0,10,0,0"
+		        Command="{Binding LeaveCommand}" />
 
 		<TextBox x:Name="OutputTextBox"
-				 Grid.Row="3"
-				 Margin="0,8,0,0"
+				 Grid.Row="4"
+				 Margin="0,12,0,0"
 				 IsReadOnly="True"
 				 FontFamily="Consolas"
 				 TextWrapping="Wrap"
-				 VerticalScrollBarVisibility="Auto" />
+				 VerticalScrollBarVisibility="Auto"
+				 Text="{Binding OutputText}" />
 	</Grid>
 </Window>

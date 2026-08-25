@@ -17,11 +17,12 @@ public sealed class GameWindowTests : IDisposable
     {
         (_session, _transport) = UiTestSession.ConnectSeatedAsync(mark: "X").GetAwaiter().GetResult();
         _window = HeadlessWindow.Prepare(new GameWindow(_session));
+        _window.Show(); // off-screen: activates bindings and item generation
     }
 
     public void Dispose() => _session.Dispose();
 
-    private IReadOnlyList<Button> Cells => _window.BoardGrid.Children.OfType<Button>().ToList();
+    private IReadOnlyList<Button> Cells => VisualTreeEx.FindChildren<System.Windows.Controls.Button>(_window.BoardGrid).ToList();
 
     private Button Cell(int index) => Cells.ElementAt(index);
 
@@ -76,12 +77,14 @@ public sealed class GameWindowTests : IDisposable
         try
         {
             GameWindow window = HeadlessWindow.Prepare(new GameWindow(session));
+            window.Show(); // off-screen: activates bindings and item generation
             await TestDispatcher.FlushAsync();
 
             Assert.True(session.IsSpectator);
             Assert.StartsWith("[Spectating] ", window.StatusText.Text);
 
-            Assert.False(UiAssert.TryPress(window.BoardGrid.Children.OfType<Button>().First()));
+            var firstCell = VisualTreeEx.FindChildren<System.Windows.Controls.Button>(window.BoardGrid).First();
+            Assert.False(UiAssert.TryPress(firstCell));
             await TestDispatcher.FlushAsync();
 
             Assert.DoesNotContain(transport.SentLines, l => l.Contains("moveRequest"));
@@ -138,7 +141,7 @@ public sealed class GameWindowTests : IDisposable
         ServerState(turn: "O", status: "won", winner: "X", winningLine: [0, 1, 2]);
         await TestDispatcher.FlushAsync();
 
-        Assert.Equal("Offer Rematch", _window.RematchButton.Content);
+        Assert.Equal("Offer Rematch", _window.ViewModel.RematchLabel);
         Assert.True(_window.RematchButton.IsEnabled);
 
         UiAssert.Press(_window.RematchButton);
@@ -153,7 +156,7 @@ public sealed class GameWindowTests : IDisposable
         ServerState(turn: "O", status: "won", winner: "X", winningLine: [0, 1, 2], offeredBy: "O");
         await TestDispatcher.FlushAsync();
 
-        Assert.Equal("Accept Rematch", _window.RematchButton.Content);
+        Assert.Equal("Accept Rematch", _window.ViewModel.RematchLabel);
         Assert.True(_window.RematchButton.IsEnabled);
         Assert.Contains("Bob offers a rematch.", _window.StatusText.Text);
 
@@ -168,7 +171,7 @@ public sealed class GameWindowTests : IDisposable
         ServerState(turn: "O", status: "won", winner: "X", winningLine: [0, 1, 2], offeredBy: "X");
         await TestDispatcher.FlushAsync();
 
-        Assert.Equal("Rematch offered...", _window.RematchButton.Content);
+        Assert.Equal("Rematch offered...", _window.ViewModel.RematchLabel);
         Assert.False(_window.RematchButton.IsEnabled);
     }
 
