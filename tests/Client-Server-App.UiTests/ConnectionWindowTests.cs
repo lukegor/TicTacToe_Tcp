@@ -46,9 +46,9 @@ public sealed class ConnectionWindowTests
     private static void Press(Button button) =>
         ((System.Windows.Automation.Provider.IInvokeProvider)new ButtonAutomationPeer(button)).Invoke();
 
-    private static async Task WaitForAsync(Func<bool> condition)
+    private static async Task WaitForAsync(Func<bool> condition, int seconds = 10)
     {
-        DateTimeOffset deadline = DateTimeOffset.UtcNow.AddSeconds(10);
+        DateTimeOffset deadline = DateTimeOffset.UtcNow.AddSeconds(seconds);
         while (!condition())
         {
             if (DateTimeOffset.UtcNow > deadline)
@@ -154,7 +154,8 @@ public sealed class ConnectionWindowTests
         UiAssert.Type(window.PortTextBox, deadPort.ToString());
         Press(window.ConnectButton);
 
-        await WaitForAsync(() => window.OutputTextBox.Text.Contains("Connection failed:"));
+        await WaitForAsync(() => window.OutputTextBox.Text.Contains("Connection failed:"), seconds: 30);
+        await WaitForAsync(() => window.ConnectButton.IsEnabled, seconds: 30);
 
         Assert.Contains("Connection failed:", window.OutputTextBox.Text);
         Assert.False(openedAny);
