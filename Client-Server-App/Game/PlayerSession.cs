@@ -1,5 +1,7 @@
 using System.IO;
 using System.Net.Sockets;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Client_Server_App.Game;
 
@@ -17,6 +19,7 @@ internal sealed class PlayerSession : IDisposable
     private readonly Func<Task<IClientTransport>> _connectFactory;
     private readonly TimeSpan _reconnectBudget;
     private readonly CancellationTokenSource _disposal = new();
+    private readonly ILogger<PlayerSession> _logger;
     private IClientTransport? _transport;
     private bool _wasPlayerWhenDropped;
     private int _seatAckVersion;
@@ -36,10 +39,15 @@ internal sealed class PlayerSession : IDisposable
     public GameStateRecord? CurrentState { get; private set; }
     public IReadOnlyList<RoomInfoRecord> LatestRooms { get; private set; } = [];
 
-    public PlayerSession(Func<Task<IClientTransport>> connectFactory, TimeSpan? reconnectBudget = null, string? displayName = null)
+    public PlayerSession(
+        Func<Task<IClientTransport>> connectFactory,
+        TimeSpan? reconnectBudget = null,
+        string? displayName = null,
+        ILogger<PlayerSession>? logger = null)
     {
         _connectFactory = connectFactory;
         _reconnectBudget = reconnectBudget ?? DefaultReconnectBudget;
+        _logger = logger ?? NullLogger<PlayerSession>.Instance;
         DisplayName = ResolveDisplayName(displayName);
     }
 
@@ -140,6 +148,7 @@ internal sealed class PlayerSession : IDisposable
                 Seated?.Invoke(joined);
                 if (joined.Restored)
                 {
+                    _logger.LogInformation("Reconnected to '{Room}'.", joined.Room);
                     LogReceived?.Invoke($"Reconnected to '{joined.Room}'.");
                 }
 
@@ -168,6 +177,7 @@ internal sealed class PlayerSession : IDisposable
                 break;
 
             case null:
+                _logger.LogDebug("Non-protocol line received: {Line}", line);
                 LogReceived?.Invoke(line);
                 break;
         }
@@ -191,6 +201,7 @@ internal sealed class PlayerSession : IDisposable
         _wasPlayerWhenDropped = MyMark is not null;
         State = PlayerSessionState.Reconnecting;
         ReconnectingStarted?.Invoke();
+        _logger.LogWarning("Connection lost while seated in '{Room}'; rejoining.", CurrentRoomName);
         LogReceived?.Invoke("Connection lost - rejoining...");
         _ = ReconnectLoopAsync(_disposal.Token);
     }

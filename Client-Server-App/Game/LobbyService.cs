@@ -1,5 +1,7 @@
 using System.IO;
 using System.Net.Sockets;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Client_Server_App.Game;
 
@@ -16,15 +18,17 @@ internal sealed class LobbyService : IDisposable
     private readonly Dictionary<string, Room> _rooms = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<Guid, Room> _membership = [];
     private readonly Dictionary<Guid, string> _playerNames = [];
+    private readonly ILogger<LobbyService> _logger;
     private readonly object _sync = new();
 
     public event Action<string>? LogReceived;
     public event Action? RoomsChanged;
 
-    public LobbyService(IServerTransport server, TimeSpan? gracePeriod = null)
+    public LobbyService(IServerTransport server, TimeSpan? gracePeriod = null, ILogger<LobbyService>? logger = null)
     {
         _server = server;
         _gracePeriod = gracePeriod ?? DefaultGracePeriod;
+        _logger = logger ?? NullLogger<LobbyService>.Instance;
     }
 
     public void Start()
@@ -310,7 +314,11 @@ internal sealed class LobbyService : IDisposable
 
     private string LookupNameCore(Guid id) => _playerNames.GetValueOrDefault(id, $"Guest-{Short(id)}");
 
-    private void Log(string message) => LogReceived?.Invoke(message);
+    private void Log(string message)
+    {
+        _logger.LogInformation("{Message}", message);
+        LogReceived?.Invoke(message);
+    }
 
     private static string Short(Guid id) => id.ToString()[..8];
 }

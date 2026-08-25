@@ -2,6 +2,8 @@ using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using Client_Server_App.Game;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Client_Server_App;
 
@@ -11,6 +13,7 @@ namespace Client_Server_App;
 internal sealed class ClientTcp : IClientTransport, IDisposable
 {
     private readonly CancellationTokenSource _cancellation = new();
+    private readonly ILogger<ClientTcp> _logger;
 
     private TcpClient? _client;
     private StreamWriter? _writer;
@@ -25,18 +28,33 @@ internal sealed class ClientTcp : IClientTransport, IDisposable
 
     public bool IsConnected => _client is { Connected: true };
 
+    public ClientTcp(ILogger<ClientTcp>? logger = null)
+    {
+        _logger = logger ?? NullLogger<ClientTcp>.Instance;
+    }
+
     /// <summary>Connects to <paramref name="host"/>:<paramref name="port"/> and starts listening for messages.</summary>
     public async Task ConnectAsync(string host, int port, CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
         TcpClient client = new();
-        await client.ConnectAsync(host, port, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await client.ConnectAsync(host, port, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug("Connect to {Host}:{Port} failed: {Reason}", host, port, ex.Message);
+            throw;
+        }
+
         _client = client;
         _writer = new StreamWriter(client.GetStream(), Encoding.UTF8, bufferSize: 1024, leaveOpen: true)
         {
             AutoFlush = true,
         };
+        _logger.LogDebug("Connected to {Host}:{Port}.", host, port);
     }
 
     /// <inheritdoc />

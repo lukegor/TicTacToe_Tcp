@@ -4,6 +4,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using Client_Server_App.Game;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Client_Server_App;
 
@@ -17,6 +19,7 @@ internal sealed class ServerTcp : IServerTransport, IDisposable
     private readonly CancellationTokenSource _cancellation = new();
     private readonly SemaphoreSlim _writeLock = new(initialCount: 1, maxCount: 1);
     private readonly TcpListener _listener;
+    private readonly ILogger<ServerTcp> _logger;
     private bool _disposed;
 
     /// <summary>Raised (on a worker thread) with the new connection's id.</summary>
@@ -31,9 +34,10 @@ internal sealed class ServerTcp : IServerTransport, IDisposable
     /// <summary>The bound port; only meaningful after <see cref="Start"/>.</summary>
     public int Port => ((IPEndPoint)_listener.LocalEndpoint).Port;
 
-    public ServerTcp(int port)
+    public ServerTcp(int port, ILogger<ServerTcp>? logger = null)
     {
         _listener = new TcpListener(IPAddress.Any, port);
+        _logger = logger ?? NullLogger<ServerTcp>.Instance;
     }
 
     public void Start()
@@ -41,6 +45,7 @@ internal sealed class ServerTcp : IServerTransport, IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
 
         _listener.Start();
+        _logger.LogDebug("Referee listening on port {Port}.", Port);
         _ = AcceptLoopAsync(_cancellation.Token);
     }
 
@@ -103,6 +108,7 @@ internal sealed class ServerTcp : IServerTransport, IDisposable
         {
             AutoFlush = true,
         };
+        _logger.LogDebug("Client {Id} connected.", id);
         _ = HandleClientAsync(id, client);
         ClientConnected?.Invoke(id);
     }
@@ -135,6 +141,7 @@ internal sealed class ServerTcp : IServerTransport, IDisposable
         }
 
         client.Dispose();
+        _logger.LogDebug("Client {Id} disconnected.", id);
         ClientDisconnected?.Invoke(id);
     }
 

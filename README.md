@@ -33,6 +33,9 @@ dotnet build Client-Server-App.slnx -c Release
 dotnet run --project Client-Server-App
 ```
 
+Session logs are written to `%LOCALAPPDATA%\Client-Server-App\logs` (one file per
+run; the newest five are kept).
+
 Warnings are treated as errors (`TreatWarningsAsErrors` in `Directory.Build.props`); the build
 is expected to be warning-free.
 

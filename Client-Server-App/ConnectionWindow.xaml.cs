@@ -1,9 +1,10 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Windows;
 using Client_Server_App.Game;
+using Microsoft.Extensions.Logging;
 
 namespace Client_Server_App;
 
@@ -36,7 +37,7 @@ public partial class ConnectionWindow : Window
         }
 
         _client?.Dispose();
-        ClientTcp client = new();
+        ClientTcp client = new(App.LoggerFactory.CreateLogger<ClientTcp>());
         _client = client;
         ConnectButton.IsEnabled = false;
         try
@@ -55,12 +56,15 @@ public partial class ConnectionWindow : Window
                     return transport;
                 }
 
-                ClientTcp fresh = new();
+                ClientTcp fresh = new(App.LoggerFactory.CreateLogger<ClientTcp>());
                 await fresh.ConnectAsync(host, port);
                 return fresh;
             }
 
-            PlayerSession session = new(ConnectFactory, displayName: NameTextBox.Text);
+            PlayerSession session = new(
+                ConnectFactory,
+                displayName: NameTextBox.Text,
+                logger: App.LoggerFactory.CreateLogger<PlayerSession>());
             await session.ConnectAsync();
 
             OpenLobbyWindow(
@@ -106,14 +110,14 @@ public partial class ConnectionWindow : Window
         }
 
         _server?.Dispose();
-        ServerTcp server = new(port);
+        ServerTcp server = new(port, App.LoggerFactory.CreateLogger<ServerTcp>());
         try
         {
             server.Start();
             _server = server;
             AppendLog($"Listening on port {port}.");
 
-            LobbyService lobby = new(server);
+            LobbyService lobby = new(server, logger: App.LoggerFactory.CreateLogger<LobbyService>());
             lobby.Start();
             OpenRefereeWindow(
                 () => new ServerWindow(lobby, port),
