@@ -1,6 +1,6 @@
 # Project Restructure Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Split the solution into portable `Client-Server-App.Core` (net10.0) plus a thin WPF shell under `src/`, align namespaces with assembly names, and add a win-x64 single-file publish profile — every commit buildable and 84/84 green.
 
@@ -35,7 +35,7 @@
 **Interfaces:**
 - Produces: `Client-Server-App.Core.dll` exposing all engine types under *unchanged* namespaces (`Client_Server_App.Game`, `Client_Server_App`, `Client_Server_App.Diagnostics`) — zero source edits inside moved files during this task.
 
-- [ ] **Step 1: Create the Core project**
+- [x] **Step 1: Create the Core project**
 
 `src/Client-Server-App.Core/Client-Server-App.Core.csproj`:
 
@@ -57,7 +57,7 @@
 
 (`RootNamespace` keeps the old value for this task; Task 2 changes it.)
 
-- [ ] **Step 2: Move sources**
+- [x] **Step 2: Move sources**
 
 ```bash
 New-Item -ItemType Directory -Force src\Client-Server-App.Core\Game, src\Client-Server-App.Core\Transports, src\Client-Server-App.Core\Diagnostics | Out-Null
@@ -69,7 +69,7 @@ git mv Client-Server-App src/Client-Server-App
 
 Note: `Game/Transports.cs` holds the two transport *interfaces*; it moves again into `Transports/` during Task 2 per the spec map.
 
-- [ ] **Step 3: Rewire the app project**
+- [x] **Step 3: Rewire the app project**
 
 `src/Client-Server-App/Client-Server-App.csproj` becomes:
 
@@ -96,7 +96,7 @@ Note: `Game/Transports.cs` holds the two transport *interfaces*; it moves again 
 
 (The previous `InternalsVisibleTo` item is deleted — tests stop referencing this assembly.)
 
-- [ ] **Step 4: Retarget tests at Core only**
+- [x] **Step 4: Retarget tests at Core only**
 
 `tests/Client-Server-App.Tests/Client-Server-App.Tests.csproj` becomes:
 
@@ -125,7 +125,7 @@ Note: `Game/Transports.cs` holds the two transport *interfaces*; it moves again 
 
 (`UseWPF` and the app `ProjectReference` are gone.)
 
-- [ ] **Step 5: Shared props, solution, Dockerfile, README**
+- [x] **Step 5: Shared props, solution, Dockerfile, README**
 
 `Directory.Build.props`: delete the line `<TargetFramework>net10.0-windows</TargetFramework>`; everything else stays.
 
@@ -169,7 +169,7 @@ RUN dotnet publish "src/Client-Server-App/Client-Server-App.csproj" `
 | `tests/` | xunit.v3 (MTP) suite against the core. |
 ```
 
-- [ ] **Step 6: Validate**
+- [x] **Step 6: Validate**
 
 ```bash
 dotnet build Client-Server-App.slnx -c Release
@@ -178,7 +178,7 @@ dotnet test
 
 Warning-free build and 84/84 required. If ghost `CS` errors from stale WPF temp projects appear, delete `obj/`+`bin/` under moved projects and rebuild.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A
@@ -198,7 +198,7 @@ git commit -m "refactor: extract portable core library"
 **Interfaces:**
 - Produces: the spec's final namespace map — `ClientServer.Core.Game`, `ClientServer.Core.Transports`, `ClientServer.Core.Diagnostics`, `ClientServer.App`, `ClientServer.App.Diagnostics`, `ClientServer.Tests.*`.
 
-- [ ] **Step 1: Apply the mapping**
+- [x] **Step 1: Apply the mapping**
 
 Namespace declarations (apply per file group):
 
@@ -233,7 +233,7 @@ Concrete known hot-spots to verify after sweep:
 - Tests' `FakeServerTransport : IServerTransport` now needs `using ClientServer.Core.Transports;`.
 - `ConnectionWindow.xaml.cs` needs `using ClientServer.Core.Game; using ClientServer.Core.Transports; using ClientServer.Core.Diagnostics; using Microsoft.Extensions.Logging; using ClientServer.App.Diagnostics;`.
 
-- [ ] **Step 2: Update XAML class references**
+- [x] **Step 2: Update XAML class references**
 
 In each XAML file, change only the `x:Class` value (and drop nothing else):
 
@@ -250,7 +250,7 @@ x:Class="ClientServer.App.MainWindow"        <!-- etc., matching each code-behin
 
 `xmlns:local` declarations already point at the code-behind's own namespace and stay syntactically valid after the rename.
 
-- [ ] **Step 3: Validate**
+- [x] **Step 3: Validate**
 
 ```bash
 dotnet build Client-Server-App.slnx -c Release
@@ -259,7 +259,7 @@ dotnet test
 
 Warning-free + 84/84. Markup compile failures here mean a missed `x:Class`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A
@@ -277,7 +277,7 @@ git commit -m "refactor: align namespaces with assembly names"
 **Interfaces:**
 - Produces: publish command usable by future release workflow (R3): `dotnet publish src/Client-Server-App -c Release -p:PublishProfile=win-x64` → one self-contained exe.
 
-- [ ] **Step 1: Create the profile**
+- [x] **Step 1: Create the profile**
 
 `src/Client-Server-App/Properties/PublishProfiles/win-x64.pubxml`:
 
@@ -296,7 +296,7 @@ git commit -m "refactor: align namespaces with assembly names"
 </Project>
 ```
 
-- [ ] **Step 2: README artifact note**
+- [x] **Step 2: README artifact note**
 
 Append under the existing Docker section:
 
@@ -314,7 +314,7 @@ Output lands in `src/Client-Server-App/bin/Release/net10.0-windows/publish/win-x
 
 (Remove the zero-width markers around the fence when pasting.)
 
-- [ ] **Step 3: Validate**
+- [x] **Step 3: Validate**
 
 ```bash
 dotnet build Client-Server-App.slnx -c Release && dotnet test && dotnet publish src/Client-Server-App -c Release -p:PublishProfile=win-x64
@@ -324,7 +324,7 @@ Test-Path src/Client-Server-App/bin/Release/net10.0-windows/publish/win-x64/Clie
 
 Launch smoke on an interactive desktop session is a manual bonus check, not a gate.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/Client-Server-App/Properties README.md

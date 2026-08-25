@@ -42,6 +42,16 @@ is expected to be warning-free.
 To launch both sides on one machine, start two instances: click **Create Host** in one and
 **Connect** in the other.
 
+## Distributable build
+
+A single-file Windows executable is produced with:
+
+```shell
+dotnet publish src/Client-Server-App -c Release -p:PublishProfile=win-x64
+```
+
+Output lands in `src/Client-Server-App/bin/Release/net10.0-windows/publish/win-x64/`.
+
 ## Docker
 
 `Dockerfile` produces reproducible, self-contained builds inside Windows containers:
