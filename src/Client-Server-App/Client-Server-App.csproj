@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <InternalsVisibleTo Include="Client-Server-App.UiTests" />
   </ItemGroup>
