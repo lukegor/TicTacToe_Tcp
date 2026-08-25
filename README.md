@@ -30,7 +30,7 @@ deliberately and forfeits an ongoing game.
 
 ```shell
 dotnet build Client-Server-App.slnx -c Release
-dotnet run --project Client-Server-App
+dotnet run --project src/Client-Server-App
 ```
 
 Session logs are written to `%LOCALAPPDATA%\Client-Server-App\logs` (one file per
@@ -58,7 +58,9 @@ hermetic CI builds rather than headless execution.
 
 | Path | Purpose |
 | --- | --- |
-| `Directory.Build.props` | Shared compile settings (target framework, nullable, analyzer policy). |
+| `Directory.Build.props` | Shared compile settings (nullable, analyzer policy). Target frameworks are per-project. |
 | `Directory.Packages.props` | Central Package Management for all NuGet versions. |
 | `Client-Server-App.slnx` | XML-based solution file. |
-| `Client-Server-App/` | The WPF application project (no external NuGet dependencies). |
+| `src/Client-Server-App.Core/` | Portable engine: game rules, rooms, protocol, transports, diagnostics (net10.0). |
+| `src/Client-Server-App/` | WPF application shell referencing the core (net10.0-windows). |
+| `tests/` | xunit.v3 (MTP) suite against the core. |

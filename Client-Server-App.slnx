@@ -1,6 +1,7 @@
 <Solution>
+  <Project Path="src/Client-Server-App.Core/Client-Server-App.Core.csproj" />
+  <Project Path="src/Client-Server-App/Client-Server-App.csproj" />
   <Folder Name="/tests/">
     <Project Path="tests/Client-Server-App.Tests/Client-Server-App.Tests.csproj" />
   </Folder>
-  <Project Path="Client-Server-App/Client-Server-App.csproj" />
 </Solution>

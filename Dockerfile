@@ -15,11 +15,12 @@ WORKDIR /src
 
 # Copy project + central build config first for better layer caching on restore.
 COPY ["Directory.Build.props", "Directory.Packages.props", "./"]
-COPY ["Client-Server-App/Client-Server-App.csproj", "Client-Server-App/"]
-RUN dotnet restore "Client-Server-App/Client-Server-App.csproj"
+COPY ["src/Client-Server-App.Core/Client-Server-App.Core.csproj", "src/Client-Server-App.Core/"]
+COPY ["src/Client-Server-App/Client-Server-App.csproj", "src/Client-Server-App/"]
+RUN dotnet restore "src/Client-Server-App/Client-Server-App.csproj"
 
 COPY . .
-RUN dotnet publish "Client-Server-App/Client-Server-App.csproj" `
+RUN dotnet publish "src/Client-Server-App/Client-Server-App.csproj" `
     -c Release `
     -r win-x64 `
     --self-contained true `
