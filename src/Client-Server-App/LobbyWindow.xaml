@@ -15,18 +15,21 @@
 
 		<StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
 			<TextBlock Text="Room name:" VerticalAlignment="Center" Margin="0,0,6,0" />
-			<TextBox x:Name="RoomNameBox" Width="180" VerticalAlignment="Center" />
-			<Button x:Name="CreateButton" Content="Create room" Width="100" Margin="8,0,0,0" Click="CreateButton_Click" />
+			<TextBox x:Name="RoomNameBox" Width="180" VerticalAlignment="Center"
+				       Text="{Binding RoomNameInput, UpdateSourceTrigger=PropertyChanged}" />
+			<Button x:Name="CreateButton" Content="Create room" Width="100" Margin="8,0,0,0" Command="{Binding CreateRoomCommand}" />
 		</StackPanel>
 
-		<ListBox x:Name="RoomsList" Grid.Row="1">
+		<ListBox x:Name="RoomsList" Grid.Row="1" ItemsSource="{Binding Rooms}">
 			<ListBox.ItemTemplate>
 				<DataTemplate>
 					<DockPanel Margin="2">
 						<Button DockPanel.Dock="Right"
 								Content="Join"
 								Width="70"
-								Click="JoinButton_Click" />
+								Command="{Binding DataContext.JoinRoomCommand,
+						          RelativeSource={RelativeSource AncestorType=Window}}"
+					                CommandParameter="{Binding}" />
 						<StackPanel Orientation="Horizontal">
 							<TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,10,0" />
 							<TextBlock Text="{Binding Label}" Foreground="Gray" />
@@ -42,6 +45,7 @@
 				 IsReadOnly="True"
 				 FontFamily="Consolas"
 				 TextWrapping="Wrap"
-				 VerticalScrollBarVisibility="Auto" />
+				 VerticalScrollBarVisibility="Auto"
+				         Text="{Binding LogText}" />
 	</Grid>
 </Window>

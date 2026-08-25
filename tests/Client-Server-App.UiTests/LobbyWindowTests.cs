@@ -23,6 +23,7 @@ public sealed class LobbyWindowTests : IDisposable
     public async Task Construction_And_RoomListPush_RendersRooms()
     {
         LobbyWindow window = HeadlessWindow.Prepare(new LobbyWindow(_session));
+        window.Show(); // off-screen: activates bindings
 
         _transport.ReceiveLine(GameJson.Serialize(new RoomListRecord(
             [new RoomInfoRecord("duel", 1, 0), new RoomInfoRecord("friday", 2, 3)])));
@@ -37,7 +38,8 @@ public sealed class LobbyWindowTests : IDisposable
     public async Task CreateButton_ValidName_SendsEnvelope_ClearsInput()
     {
         LobbyWindow window = HeadlessWindow.Prepare(new LobbyWindow(_session));
-        window.RoomNameBox.Text = "  friday  ";
+        window.Show(); // off-screen: activates bindings
+        UiAssert.Type(window.RoomNameBox, "  friday  ");
 
         UiAssert.Press(window.CreateButton);
         await TestDispatcher.FlushAsync();
@@ -50,7 +52,8 @@ public sealed class LobbyWindowTests : IDisposable
     public async Task CreateButton_EmptyName_ShowsNotice_SendsNothing()
     {
         LobbyWindow window = HeadlessWindow.Prepare(new LobbyWindow(_session));
-        window.RoomNameBox.Text = "   ";
+        window.Show(); // off-screen: activates bindings
+        UiAssert.Type(window.RoomNameBox, "   ");
         int sentBefore = _transport.SentLines.Count;
 
         UiAssert.Press(window.CreateButton);
@@ -64,6 +67,7 @@ public sealed class LobbyWindowTests : IDisposable
     public async Task JoinRow_PressGeneratedJoinButton_SendsJoinRoom()
     {
         LobbyWindow window = HeadlessWindow.Prepare(new LobbyWindow(_session));
+        window.Show(); // off-screen: activates bindings
         _transport.ReceiveLine(GameJson.Serialize(new RoomListRecord([new RoomInfoRecord("duel", 1, 0)])));
         await TestDispatcher.FlushAsync();
         RealizeRoomsList(window);
@@ -83,6 +87,7 @@ public sealed class LobbyWindowTests : IDisposable
     public async Task JoinRow_DisconnectedSession_SurfaceOperationError()
     {
         LobbyWindow window = HeadlessWindow.Prepare(new LobbyWindow(_session));
+        window.Show(); // off-screen: activates bindings
         _transport.ReceiveLine(GameJson.Serialize(new RoomListRecord([new RoomInfoRecord("duel", 1, 0)])));
         await TestDispatcher.FlushAsync();
         RealizeRoomsList(window);
@@ -101,6 +106,7 @@ public sealed class LobbyWindowTests : IDisposable
     public async Task ErrorEnvelope_AppendsNotice_And_ReturnedToLobby_RecoversList()
     {
         LobbyWindow window = HeadlessWindow.Prepare(new LobbyWindow(_session));
+        window.Show(); // off-screen: activates bindings
 
         _transport.ReceiveLine(GameJson.Serialize(new ErrorRecord("Room 'x' does not exist.")));
         await TestDispatcher.FlushAsync();
