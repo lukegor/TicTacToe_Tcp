@@ -18,6 +18,13 @@ internal interface IClientTransport
     event Action? Disconnected;
 
     Task SendLineAsync(string message, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Begins reading incoming lines. Call only after subscribing to the events:
+    /// nothing is read (and nothing raised) before it, so early server pushes
+    /// are buffered by the socket instead of being lost.
+    /// </summary>
+    void Start();
 }
 
 /// <summary>Lifecycle phases of a client-side <see cref="PlayerSession"/>.</summary>

@@ -14,6 +14,7 @@ internal sealed class ClientTcp : IClientTransport, IDisposable
 
     private TcpClient? _client;
     private StreamWriter? _writer;
+    private int _receiving;
     private bool _disposed;
 
     /// <summary>Raised (on a worker thread) whenever a message arrives from the server.</summary>
@@ -36,6 +37,18 @@ internal sealed class ClientTcp : IClientTransport, IDisposable
         {
             AutoFlush = true,
         };
+    }
+
+    /// <inheritdoc />
+    public void Start()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        TcpClient? client = _client ?? throw new InvalidOperationException("The client is not connected.");
+        if (Interlocked.Exchange(ref _receiving, 1) != 0)
+        {
+            return;
+        }
+
         _ = ReceiveLoopAsync(client);
     }
 

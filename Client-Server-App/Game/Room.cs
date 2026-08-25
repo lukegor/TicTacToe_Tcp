@@ -17,6 +17,8 @@ internal sealed class Room : IDisposable
     private CancellationTokenSource? _graceCts;
     private Guid? _playerX;
     private Guid? _playerO;
+    private string? _xName;
+    private string? _oName;
     private bool _xWantsRematch;
     private bool _oWantsRematch;
     private string? _graceDroppedMark;
@@ -72,7 +74,7 @@ internal sealed class Room : IDisposable
     }
 
     /// <summary>Seats <paramref name="id"/> in the first vacant slot (X, then O).</summary>
-    public void Seat(Guid id)
+    public void Seat(Guid id, string displayName)
     {
         string mark;
         bool restored;
@@ -86,11 +88,13 @@ internal sealed class Room : IDisposable
             if (_playerX is null)
             {
                 _playerX = id;
+                _xName = displayName;
                 mark = "X";
             }
             else
             {
                 _playerO = id;
+                _oName = displayName;
                 mark = "O";
             }
 
@@ -101,16 +105,17 @@ internal sealed class Room : IDisposable
         SendTo(id, new JoinedRecord(Name, mark, restored, SnapshotCore()));
         NotifyMembershipChanged();
 
-        bool started;
+        // Broadcast whenever both seats are filled: fresh games announce their
+        // start, and restored seats push the returning player's name to the room.
+        bool bothSeated;
         lock (_sync)
         {
-            started = _playerX is not null
+            bothSeated = _playerX is not null
                 && _playerO is not null
-                && _game.Status == GameStatus.InProgress
-                && _game.Board.All(cell => cell is null);
+                && _game.Status == GameStatus.InProgress;
         }
 
-        if (started)
+        if (bothSeated)
         {
             BroadcastState();
         }
@@ -152,6 +157,13 @@ internal sealed class Room : IDisposable
                 return;
             }
 
+            // A solo occupant cannot pre-play: the game exists only once both
+            // seats are taken.
+            if (PlayerCountCore() < 2)
+            {
+                return;
+            }
+
             _ = _game.TryApplyMove(cell, ParseMark(mark));
             line = SerializeSnapshotCore();
             recipients = MembersCore();
@@ -165,6 +177,11 @@ internal sealed class Room : IDisposable
         bool restart;
         lock (_sync)
         {
+            if (_closed || _game.Status == GameStatus.InProgress)
+            {
+                return;
+            }
+
             if (id == _playerX)
             {
                 _xWantsRematch = true;
@@ -181,9 +198,15 @@ internal sealed class Room : IDisposable
             restart = _xWantsRematch && _oWantsRematch;
         }
 
+        // A lone vote must be visible: the opponent learns they are being
+        // challenged through the next snapshot's RematchOfferedBy field.
         if (restart)
         {
             StartNextRound();
+        }
+        else
+        {
+            BroadcastState();
         }
     }
 
@@ -324,9 +347,11 @@ internal sealed class Room : IDisposable
         string line;
         lock (_sync)
         {
-            _winnerReason = "forfeit";
+            // Only an undecided game can be forfeited; a departure after the
+            // result is in must not relabel it (e.g. a win becoming "by forfeit").
             if (_game.Status == GameStatus.InProgress)
             {
+                _winnerReason = "forfeit";
                 _game.DeclareForfeit(ParseMark(guiltyMark == "X" ? "O" : "X"));
             }
 
@@ -385,6 +410,7 @@ internal sealed class Room : IDisposable
         lock (_sync)
         {
             (_playerX, _playerO) = (_playerO, _playerX);
+            (_xName, _oName) = (_oName, _xName);
             _xWantsRematch = false;
             _oWantsRematch = false;
             _winnerReason = null;
@@ -492,11 +518,13 @@ internal sealed class Room : IDisposable
         if (mark == "X")
         {
             _playerX = null;
+            _xName = null;
             _xWantsRematch = false;
         }
         else if (mark == "O")
         {
             _playerO = null;
+            _oName = null;
             _oWantsRematch = false;
         }
     }
@@ -508,20 +536,37 @@ internal sealed class Room : IDisposable
     private static GameStateRecord ParseSnapshot(string line) =>
         (GameStateRecord)GameJson.TryParse(line)!;
 
-    private GameStateRecord BuildStateCore() => new(
-        Board: _game.Board.Select(CellToString).ToArray(),
-        Turn: _game.Turn.ToString(),
-        Status: _game.Status switch
+    /// <summary>
+    /// Room-level status. A pristine room with a vacant seat is "waiting":
+    /// the game has not begun, so no one is on turn yet.
+    /// </summary>
+    private string StatusCodeCore()
+    {
+        if (PlayerCountCore() < 2 && _game.Board.All(cell => cell is null))
+        {
+            return "waiting";
+        }
+
+        return _game.Status switch
         {
             GameStatus.Won => "won",
             GameStatus.Draw => "draw",
             _ => "inProgress",
-        },
+        };
+    }
+
+    private GameStateRecord BuildStateCore() => new(
+        Board: _game.Board.Select(CellToString).ToArray(),
+        Turn: _game.Turn.ToString(),
+        Status: StatusCodeCore(),
         Winner: _game.Winner?.ToString(),
         WinningLine: _game.WinningLine?.ToArray(),
         Round: _round,
         Room: Name,
-        WinnerReason: _winnerReason);
+        WinnerReason: _winnerReason,
+        XName: _xName,
+        OName: _oName,
+        RematchOfferedBy: _xWantsRematch ? "X" : _oWantsRematch ? "O" : null);
 
     private void CancelGraceCore()
     {

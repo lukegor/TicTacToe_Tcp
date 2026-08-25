@@ -9,13 +9,18 @@ client instances browse a live lobby to create or join a game.
 
 ## Playing
 
-Start three instances. Instance one clicks **Create Host** (a referee window
-appears). Instances two and three click **Connect**, then create or join a room
-in the lobby. The first two players seat as X and O and the game starts
-automatically; further joiners watch as spectators. If a player's connection
-drops, they rejoin their seat automatically within a 10-second grace window —
-otherwise the opponent wins by forfeit. Closing the game window returns you to
-the lobby; **Leave** exits deliberately and forfeits an ongoing game.
+Enter your name in the Connect panel (optional — a guest name is assigned if you
+skip it); it is shown to your opponent and in the referee log. Start three
+instances. Instance one clicks **Create Host** (a referee window appears).
+Instances two and three click **Connect**, then create or join a room in the
+lobby. The first two players seat as X and O and the game starts
+automatically; further joiners watch as spectators. When a game ends, offering
+a rematch notifies the opponent immediately — their button turns into
+**Accept Rematch** until they respond; the round restarts (with swapped marks)
+once both agree. If a player's connection drops, they rejoin their seat
+automatically within a 10-second grace window — otherwise the opponent wins by
+forfeit. Closing the game window returns you to the lobby; **Leave** exits
+deliberately and forfeits an ongoing game.
 
 ## Requirements
 

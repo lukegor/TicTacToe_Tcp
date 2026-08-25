@@ -51,6 +51,69 @@ public sealed class PlayerSessionTests
     }
 
     [Fact]
+    public void DisplayName_BlankOrMissing_ResolvesToGuestLabel()
+    {
+        ScriptedConnections connections = new();
+        using PlayerSession unnamed = new(connections.Factory);
+        using PlayerSession blank = new(connections.Factory, displayName: "   ");
+
+        Assert.Matches("^Guest-\\d{4}$", unnamed.DisplayName);
+        Assert.Matches("^Guest-\\d{4}$", blank.DisplayName);
+        Assert.NotEqual(unnamed.DisplayName, blank.DisplayName); // independent guests stay distinguishable
+    }
+
+    [Fact]
+    public void DisplayName_SuppliedName_IsKeptAsIs()
+    {
+        ScriptedConnections connections = new();
+        using PlayerSession session = new(connections.Factory, displayName: "  Alice  ");
+
+        Assert.Equal("Alice", session.DisplayName);
+    }
+
+    [Fact]
+    public async Task Connect_SendsHelloWithDisplayName_BeforeAnythingElse()
+    {
+        ScriptedConnections connections = new();
+        using PlayerSession session = new(connections.Factory, displayName: "Alice");
+        await session.ConnectAsync();
+        FakeClientTransport transport = connections.Created.Single();
+
+        string sent = Assert.Single(transport.SentLines);
+        Assert.Contains("\"type\":\"hello\"", sent);
+        Assert.Contains("\"playerName\":\"Alice\"", sent);
+    }
+
+    [Fact]
+    public async Task JoinRoom_DoesNotCarryName_IdentityIsHelloOnly()
+    {
+        ScriptedConnections connections = new();
+        using PlayerSession session = new(connections.Factory, displayName: "Alice");
+        await session.ConnectAsync();
+        FakeClientTransport transport = connections.Created.Single();
+
+        await session.JoinRoomAsync("friday");
+
+        Assert.Equal(2, transport.SentLines.Count);
+        Assert.Contains("\"type\":\"joinRoom\"", transport.SentLines[1]);
+        Assert.DoesNotContain("Alice", transport.SentLines[1]);
+    }
+
+    [Fact]
+    public async Task CreateRoom_AfterHello_IsSecondLine()
+    {
+        ScriptedConnections connections = new();
+        using PlayerSession session = new(connections.Factory, displayName: "Bob");
+        await session.ConnectAsync();
+        FakeClientTransport transport = connections.Created.Single();
+
+        await session.CreateRoomAsync("duel");
+
+        Assert.Equal(2, transport.SentLines.Count);
+        Assert.Contains("\"type\":\"createRoom\"", transport.SentLines[1]);
+    }
+
+    [Fact]
     public async Task Connect_TransitionsToLobby()
     {
         ScriptedConnections connections = new();
@@ -74,7 +137,7 @@ public sealed class PlayerSessionTests
         await session.JoinRoomAsync("friday");
         transport.ReceiveLine(GameJson.Serialize(new JoinedRecord("friday", "X", false, Snapshot("friday"))));
 
-        Assert.Contains("\"type\":\"joinRoom\"", Assert.Single(transport.SentLines));
+        Assert.Contains("\"type\":\"joinRoom\"", transport.SentLines[^1]); // [0] is the hello
         Assert.Equal(PlayerSessionState.Seated, session.State);
         Assert.Equal("friday", session.CurrentRoomName);
         Assert.Equal("X", session.MyMark);
@@ -105,7 +168,7 @@ public sealed class PlayerSessionTests
         FakeClientTransport transport = connections.Created.Single();
 
         await session.PlayCellAsync(0); // lobby -> ignored
-        Assert.Empty(transport.SentLines);
+        _ = Assert.Single(transport.SentLines); // only the hello so far
 
         transport.ReceiveLine(GameJson.Serialize(new JoinedRecord("friday", "X", false, Snapshot("friday"))));
         await session.PlayCellAsync(4);
@@ -159,8 +222,7 @@ public sealed class PlayerSessionTests
 
         await session.LeaveRoomAsync();
 
-        string sent = Assert.Single(transport.SentLines);
-        Assert.Contains("\"type\":\"leaveRoom\"", sent);
+        Assert.Contains("\"type\":\"leaveRoom\"", transport.SentLines[^1]); // [0] is the hello
         Assert.Equal(PlayerSessionState.Lobby, session.State);
     }
 
@@ -191,7 +253,11 @@ public sealed class PlayerSessionTests
         Assert.Equal(PlayerSessionState.Reconnecting, session.State); // awaiting server's joined ack
         Assert.Equal(2, connections.Created.Count);
         FakeClientTransport replacement = connections.Created[1];
-        string joinLine = Assert.Single(replacement.SentLines);
+
+        // The replacement connection re-announces the name before reclaiming the seat.
+        Assert.Equal(2, replacement.SentLines.Count);
+        Assert.Contains("\"type\":\"hello\"", replacement.SentLines[0]);
+        string joinLine = replacement.SentLines[1];
         Assert.Contains("\"type\":\"joinRoom\"", joinLine);
         Assert.Contains("friday", joinLine);
 
@@ -199,6 +265,70 @@ public sealed class PlayerSessionTests
             new GameStateRecord(["X", "", "", "", "", "", "", "", ""], "O", "inProgress", null, null, 1, "friday"))));
         Assert.Equal(PlayerSessionState.Seated, session.State);
         Assert.Equal("X", session.CurrentState!.Board[0]);
+    }
+
+    [Fact]
+    public async Task UnexpectedDrop_RejoinLandsAsSpectator_ShedsAndRetries()
+    {
+        ScriptedConnections connections = new();
+        using PlayerSession session = new(connections.Factory, TestBudget);
+        await session.ConnectAsync();
+        FakeClientTransport original = connections.Created.Single();
+        original.ReceiveLine(GameJson.Serialize(new JoinedRecord("friday", "X", false,
+            new GameStateRecord(["X", "", "", "", "", "", "", "", ""], "O", "inProgress", null, null, 1, "friday"))));
+
+        original.SimulateDisconnect();
+
+        // First reconnect lands as spectator: the server processed the old
+        // connection's disconnect AFTER this join (ordering race).
+        Stopwatch clock = Stopwatch.StartNew();
+        while (connections.Created.Count < 2 && clock.Elapsed < TimeSpan.FromSeconds(5))
+        {
+            await Task.Delay(20);
+        }
+
+        FakeClientTransport replacement = connections.Created[1];
+
+        // Sync on the observable handshake: only inject the ack once the session
+        // has actually sent joinRoom on THIS transport (handlers attached).
+        clock.Restart();
+        while (!replacement.SentLines.Any(l => l.Contains("\"type\":\"joinRoom\"", StringComparison.Ordinal))
+               && clock.Elapsed < TimeSpan.FromSeconds(5))
+        {
+            await Task.Delay(20);
+        }
+
+        replacement.ReceiveLine(GameJson.Serialize(new JoinedRecord("friday", null, false,
+            new GameStateRecord(["X", "", "", "", "", "", "", "", ""], "O", "inProgress", null, null, 1, "friday"))));
+
+        // Session sheds the spectator seat (leaveRoom) and retries the join.
+        while (connections.Created.Count < 3 && clock.Elapsed < TimeSpan.FromSeconds(8))
+        {
+            await Task.Delay(20);
+        }
+
+        Assert.True(
+            connections.Created.Count >= 3,
+            $"created={connections.Created.Count}, state={session.State}, mark={session.MyMark}, " +
+            $"replacementSent=[{string.Join(" | ", replacement.SentLines)}]");
+
+        FakeClientTransport third = connections.Created[2];
+        clock.Restart();
+        while (third.SentLines.Count < 2 && clock.Elapsed < TimeSpan.FromSeconds(5))
+        {
+            await Task.Delay(20);
+        }
+
+        Assert.Contains(replacement.SentLines, l => l.Contains("\"type\":\"leaveRoom\"", StringComparison.Ordinal));
+        Assert.True(
+            third.SentLines.Count == 2 && third.SentLines[1].Contains("\"type\":\"joinRoom\"", StringComparison.Ordinal),
+            $"thirdSent=[{string.Join(" | ", third.SentLines)}], state={session.State}, mark={session.MyMark}");
+
+        third.ReceiveLine(GameJson.Serialize(new JoinedRecord("friday", "X", true,
+            new GameStateRecord(["X", "", "", "", "", "", "", "", ""], "O", "inProgress", null, null, 1, "friday"))));
+        Assert.Equal(PlayerSessionState.Seated, session.State);
+        Assert.Equal("X", session.MyMark);
+        Assert.False(session.IsSpectator);
     }
 
     [Fact]

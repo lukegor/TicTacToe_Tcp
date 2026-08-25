@@ -123,6 +123,65 @@ public sealed class LobbyServiceTests
     }
 
     [Fact]
+    public void Hello_AnnouncesName_InConnectedAndDisconnectedLogs()
+    {
+        using LobbyService lobby = CreateLobby();
+        List<string> logs = [];
+        lobby.LogReceived += logs.Add;
+        Guid id = _transport.SimulateClientConnected();
+
+        _transport.ReceiveLine(id, GameJson.Serialize(new HelloRecord("Alice")));
+        _transport.SimulateClientDisconnected(id);
+
+        Assert.Contains(logs, l => l.StartsWith("Alice (", StringComparison.Ordinal) && l.EndsWith(") connected.", StringComparison.Ordinal));
+        Assert.Contains(logs, l => l.StartsWith("Alice (", StringComparison.Ordinal) && l.EndsWith(") disconnected.", StringComparison.Ordinal));
+        Assert.DoesNotContain(logs, l => l.Contains($"Client {id.ToString()[..8]} connected", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void PlayerNames_AreResolvedAndFlowIntoGameState()
+    {
+        using LobbyService lobby = CreateLobby();
+        Guid creator = _transport.SimulateClientConnected();
+        Guid second = _transport.SimulateClientConnected();
+        _transport.ReceiveLine(creator, GameJson.Serialize(new HelloRecord("  Alice  ")));
+        _transport.ReceiveLine(second, GameJson.Serialize(new HelloRecord("Bob")));
+        _transport.ReceiveLine(creator, GameJson.Serialize(new CreateRoomRecord("duel")));
+        _transport.ReceiveLine(second, GameJson.Serialize(new JoinRoomRecord("duel")));
+
+        GameStateRecord state = LastState(second);
+        Assert.Equal("Alice", state.XName); // trimmed
+        Assert.Equal("Bob", state.OName);
+        Assert.Equal("Alice", LastJoined(creator).State.XName);
+    }
+
+    [Fact]
+    public void BlankOrMissingHello_FallsBackToGuestLabel()
+    {
+        using LobbyService lobby = CreateLobby();
+        Guid creator = _transport.SimulateClientConnected(); // never says hello
+        Guid second = _transport.SimulateClientConnected();
+        _transport.ReceiveLine(second, GameJson.Serialize(new HelloRecord("   ")));
+        _transport.ReceiveLine(creator, GameJson.Serialize(new CreateRoomRecord("duel")));
+        _transport.ReceiveLine(second, GameJson.Serialize(new JoinRoomRecord("duel")));
+
+        GameStateRecord state = LastState(second);
+        Assert.Matches("^Guest-.+", state.XName!);
+        Assert.Matches("^Guest-.+", state.OName!);
+    }
+
+    [Fact]
+    public void OversizedPlayerName_IsTruncatedTo30Characters()
+    {
+        using LobbyService lobby = CreateLobby();
+        Guid creator = _transport.SimulateClientConnected();
+        _transport.ReceiveLine(creator, GameJson.Serialize(new HelloRecord(new string('n', 40))));
+        _transport.ReceiveLine(creator, GameJson.Serialize(new CreateRoomRecord("duel")));
+
+        Assert.Equal(30, LastJoined(creator).State.XName!.Length);
+    }
+
+    [Fact]
     public void MoveRequests_RouteThroughRoom_SpectatorMoveIgnored()
     {
         using LobbyService lobby = CreateLobby();

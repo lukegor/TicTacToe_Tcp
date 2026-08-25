@@ -35,14 +35,29 @@ public sealed class GameJsonTests
     }
 
     [Fact]
+    public void Serialize_State_CarriesNamesAndRematchOffer()
+    {
+        string json = GameJson.Serialize(new GameStateRecord(
+            ["", "", "", "", "", "", "", "", ""], "O", "won", "X", [0, 1, 2], 1,
+            "friday", WinnerReason: null, XName: "Alice", OName: "Bob", RematchOfferedBy: "X"));
+
+        Assert.Contains("\"xName\":\"Alice\"", json);
+        Assert.Contains("\"oName\":\"Bob\"", json);
+        Assert.Contains("\"rematchOfferedBy\":\"X\"", json);
+    }
+
+    [Fact]
     public void TryParse_RoundTripsEveryEnvelopeKind()
     {
         GameEnvelope[] originals =
         [
             new MoveRequestRecord(7),
             new RematchOfferRecord(),
+            new HelloRecord("Alice"),
             new GameStateRecord(["", "", "", "", "", "", "", "", ""], "X", "inProgress", null, null, 1, "friday"),
-            new GameStateRecord(["X", "X", "X", "", "O", "O", "", "", ""], "O", "won", "X", [0, 1, 2], 3, "friday"),
+            new GameStateRecord(
+                ["X", "X", "X", "", "O", "O", "", "", ""], "O", "won", "X", [0, 1, 2], 3,
+                "friday", "forfeit", "Alice", "Bob", "X"),
         ];
 
         foreach (GameEnvelope original in originals)
@@ -59,6 +74,10 @@ public sealed class GameJsonTests
                 case (RematchOfferRecord, RematchOfferRecord):
                     break;
 
+                case (HelloRecord o, HelloRecord p):
+                    Assert.Equal(o.PlayerName, p.PlayerName);
+                    break;
+
                 case (GameStateRecord o, GameStateRecord p):
                     Assert.Equal(o.Board, p.Board);
                     Assert.Equal(o.Turn, p.Turn);
@@ -68,6 +87,9 @@ public sealed class GameJsonTests
                     Assert.Equal(o.Round, p.Round);
                     Assert.Equal(o.Room, p.Room);
                     Assert.Equal(o.WinnerReason, p.WinnerReason);
+                    Assert.Equal(o.XName, p.XName);
+                    Assert.Equal(o.OName, p.OName);
+                    Assert.Equal(o.RematchOfferedBy, p.RematchOfferedBy);
                     break;
             }
         }

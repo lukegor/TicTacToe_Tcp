@@ -15,6 +15,7 @@ internal sealed class LobbyService : IDisposable
     private readonly TimeSpan _gracePeriod;
     private readonly Dictionary<string, Room> _rooms = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<Guid, Room> _membership = [];
+    private readonly Dictionary<Guid, string> _playerNames = [];
     private readonly object _sync = new();
 
     public event Action<string>? LogReceived;
@@ -52,21 +53,21 @@ internal sealed class LobbyService : IDisposable
 
             _rooms.Clear();
             _membership.Clear();
+            _playerNames.Clear();
         }
     }
 
-    private void OnClientConnected(Guid id)
-    {
-        Log($"Client {Short(id)} connected.");
-        PushRoomList();
-    }
+    private void OnClientConnected(Guid id) => PushRoomList();
 
     private void OnClientDisconnected(Guid id)
     {
         Room? room;
+        string name;
         lock (_sync)
         {
             _membership.Remove(id, out room);
+            name = LookupNameCore(id);
+            _playerNames.Remove(id);
         }
 
         if (room is not null)
@@ -74,13 +75,17 @@ internal sealed class LobbyService : IDisposable
             room.HandleDisconnect(id);
         }
 
-        Log($"Client {Short(id)} disconnected.");
+        Log($"{name} ({Short(id)}) disconnected.");
     }
 
     private void OnMessageReceived(Guid sender, string line)
     {
         switch (GameJson.TryParse(line))
         {
+            case HelloRecord hello:
+                HandleHello(sender, hello.PlayerName);
+                break;
+
             case CreateRoomRecord create:
                 HandleCreate(sender, create.Name);
                 break;
@@ -115,6 +120,19 @@ internal sealed class LobbyService : IDisposable
         }
     }
 
+    /// <summary>Records the announced display name; the connection log doubles as
+    /// the identity announcement ("Alice (1a2b3c4d) connected.").</summary>
+    private void HandleHello(Guid id, string rawName)
+    {
+        string name = ResolvePlayerName(rawName, id);
+        lock (_sync)
+        {
+            _playerNames[id] = name;
+        }
+
+        Log($"{name} ({Short(id)}) connected.");
+    }
+
     private void HandleCreate(Guid creator, string rawName)
     {
         string name = rawName.Trim();
@@ -146,13 +164,14 @@ internal sealed class LobbyService : IDisposable
 
         // Seat outside the lobby lock: Room raises MembershipChanged synchronously,
         // which re-enters PushRoomList -> GetRooms (same lock).
-        room.Seat(creator);
+        string creatorName = LookupName(creator);
+        room.Seat(creator, creatorName);
         lock (_sync)
         {
             _membership[creator] = room;
         }
 
-        Log($"Room '{name}' created by {Short(creator)}.");
+        Log($"Room '{name}' created by {creatorName} ({Short(creator)}).");
         PushRoomList();
         RoomsChanged?.Invoke();
     }
@@ -172,7 +191,8 @@ internal sealed class LobbyService : IDisposable
 
         if (room.HasVacancy)
         {
-            room.Seat(joiner);
+            string joinerName = LookupName(joiner);
+            room.Seat(joiner, joinerName);
         }
         else
         {
@@ -184,7 +204,7 @@ internal sealed class LobbyService : IDisposable
             _membership[joiner] = room;
         }
 
-        Log($"{Short(joiner)} joined '{room.Name}'.");
+        Log($"{LookupName(joiner)} ({Short(joiner)}) joined '{room.Name}'.");
         PushRoomList();
         RoomsChanged?.Invoke();
     }
@@ -266,6 +286,29 @@ internal sealed class LobbyService : IDisposable
 
     private static RoomInfoRecord ToInfo(Room room) =>
         new(room.Name, room.PlayerCount, room.SpectatorCount);
+
+    /// <summary>Normalizes a client-supplied player name; blank names fall back to
+    /// a deterministic guest label derived from the connection id.</summary>
+    private static string ResolvePlayerName(string raw, Guid id)
+    {
+        string name = raw.Trim();
+        if (name.Length > 30)
+        {
+            name = name[..30];
+        }
+
+        return name.Length == 0 ? $"Guest-{Short(id)}" : name;
+    }
+
+    private string LookupName(Guid id)
+    {
+        lock (_sync)
+        {
+            return LookupNameCore(id);
+        }
+    }
+
+    private string LookupNameCore(Guid id) => _playerNames.GetValueOrDefault(id, $"Guest-{Short(id)}");
 
     private void Log(string message) => LogReceived?.Invoke(message);
 

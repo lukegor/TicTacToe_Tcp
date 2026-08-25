@@ -17,7 +17,6 @@ public partial class GameWindow : Window
     private readonly PlayerSession _session;
     private readonly Brush _defaultCellBackground = Brushes.White;
     private GameStateRecord? _renderedState;
-    private bool _rematchOfferedLocally;
 
     internal GameWindow(PlayerSession session)
     {
@@ -30,6 +29,15 @@ public partial class GameWindow : Window
         session.ErrorReceived += OnLogMessage;
         session.LogReceived += OnLogMessage;
         session.ReconnectingStarted += OnReconnectingStarted;
+
+        // The Seated notification can precede this window's creation (the lobby
+        // opens the window only after the event fires), so the initial snapshot
+        // must be replayed from the session or the board sits at "Joining..."
+        // until the next server broadcast.
+        if (_session.CurrentState is { } initialState)
+        {
+            Render(initialState);
+        }
     }
 
     private void OnStateReceived(GameStateRecord state) =>
@@ -67,24 +75,12 @@ public partial class GameWindow : Window
 
     private void OnSeated(JoinedRecord joined)
     {
-        Title = $"Tic-Tac-Toe — {joined.Room}" + (joined.Mark is null ? " (spectator)" : $" ({joined.Mark})");
-
-        if (_renderedState is null || joined.State.Round >= _renderedState.Round)
-        {
-            if (_renderedState is { } previous && joined.State.Round > previous.Round)
-            {
-                _rematchOfferedLocally = false;
-            }
-
-            _renderedState = joined.State;
-        }
-
         if (joined.Restored)
         {
             AppendLog("Reconnected — your seat was restored.");
         }
 
-        Render(_renderedState);
+        Render(joined.State);
     }
 
     private void ShowReconnectBanner()
@@ -116,8 +112,6 @@ public partial class GameWindow : Window
 
     private async void RematchButton_Click(object sender, RoutedEventArgs e)
     {
-        _rematchOfferedLocally = true;
-        RefreshRematchButton();
         await SafeCallAsync(() => _session.SendRematchOfferAsync(), "Rematch failed");
     }
 
@@ -143,16 +137,13 @@ public partial class GameWindow : Window
 
     private void Render(GameStateRecord state)
     {
-        if (_renderedState is { } previous && state.Round > previous.Round)
-        {
-            _rematchOfferedLocally = false;
-        }
-
         _renderedState = state;
         string? myMark = _session.MyMark;
         bool spectator = myMark is null;
         bool inProgress = state.Status == "inProgress";
         bool myTurn = inProgress && !spectator && state.Turn == myMark;
+
+        Title = $"Tic-Tac-Toe — {state.Room}" + DescribeSeats(state, myMark, spectator);
 
         for (int i = 0; i < _cells.Length; i++)
         {
@@ -169,8 +160,9 @@ public partial class GameWindow : Window
             }
         }
 
-        StatusText.Text = (spectator ? "[Spectating] " : string.Empty) + state.Status switch
+        string status = (spectator ? "[Spectating] " : string.Empty) + state.Status switch
         {
+            "waiting" => "Waiting for an opponent to join...",
             "won" when state.WinnerReason == "forfeit" => $"{state.Winner} wins by forfeit.",
             "won" when state.Winner == myMark => "You win!",
             "won" when spectator => $"{state.Winner} wins!",
@@ -181,15 +173,45 @@ public partial class GameWindow : Window
             _ => "Opponent's move.",
         };
 
-        RefreshRematchButton(inProgress);
+        // The opponent has voted for a rematch and this client has not: make the
+        // challenge unmistakable, both here and on the rematch button.
+        if (RematchOfferedByOpponent(state) is { } challenger)
+        {
+            status += $"{Environment.NewLine}{challenger} offers a rematch.";
+        }
+
+        StatusText.Text = status;
+        RefreshRematchButton(state);
     }
 
-    private void RefreshRematchButton(bool inProgress = false)
+    private void RefreshRematchButton(GameStateRecord state)
     {
-        bool gameOver = _renderedState is not null && !inProgress;
+        bool decided = state.Status is "won" or "draw"; // "waiting" is not a finished game
         bool player = !_session.IsSpectator;
-        RematchButton.IsEnabled = gameOver && player && !_rematchOfferedLocally;
-        RematchButton.Content = _rematchOfferedLocally ? "Rematch offered..." : "Offer Rematch";
+        bool mine = decided && player && state.RematchOfferedBy == _session.MyMark;
+        RematchButton.IsEnabled = decided && player && !mine;
+        RematchButton.Content = mine
+            ? "Rematch offered..."
+            : RematchOfferedByOpponent(state) is not null ? "Accept Rematch"
+            : "Offer Rematch";
+    }
+
+    /// <summary>Name of the seat that requested the outstanding rematch, or null
+    /// when there is no offer or it came from this client.</summary>
+    private string? RematchOfferedByOpponent(GameStateRecord state) =>
+        state.RematchOfferedBy is { } mark && mark != _session.MyMark ? SeatName(state, mark) : null;
+
+    private static string SeatName(GameStateRecord state, string mark) =>
+        mark == "X" ? state.XName ?? "X" : state.OName ?? "O";
+
+    private static string DescribeSeats(GameStateRecord state, string? myMark, bool spectator)
+    {
+        if (state.XName is not null && state.OName is not null)
+        {
+            return $" — {state.XName} (X) vs {state.OName} (O)";
+        }
+
+        return spectator ? " (spectator)" : $" ({myMark})";
     }
 
     private void AppendLog(string message) =>
@@ -203,6 +225,7 @@ public partial class GameWindow : Window
         _session.ErrorReceived -= OnLogMessage;
         _session.LogReceived -= OnLogMessage;
         _session.ReconnectingStarted -= OnReconnectingStarted;
+        _ = _session.LeaveRoomAsync();
         base.OnClosed(e);
     }
 }

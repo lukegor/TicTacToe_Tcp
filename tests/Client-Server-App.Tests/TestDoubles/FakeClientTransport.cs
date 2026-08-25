@@ -15,6 +15,10 @@ public sealed class FakeClientTransport : IClientTransport
         return Task.CompletedTask;
     }
 
+    public void Start()
+    {
+    }
+
     public void ReceiveLine(string line) => MessageReceived?.Invoke(line);
 
     public void SimulateDisconnect() => Disconnected?.Invoke();

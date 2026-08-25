@@ -53,12 +53,14 @@ public sealed class ServerTcpConnectionEventsTests
         TaskCompletionSource<string> firstReceived = new(TaskCreationOptions.RunContinuationsAsynchronously);
         first.MessageReceived += line => firstReceived.TrySetResult(line);
         await first.ConnectAsync("127.0.0.1", server.Port);
+        first.Start();
         Guid firstId = await firstConnected.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
         using ClientTcp second = new();
         int secondSeen = 0;
         second.MessageReceived += _ => secondSeen++;
         await second.ConnectAsync("127.0.0.1", server.Port);
+        second.Start();
         _ = await secondConnected.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
         await server.SendToAsync(firstId, "just-you");

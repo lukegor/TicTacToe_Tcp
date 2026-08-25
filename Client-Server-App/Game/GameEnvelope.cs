@@ -13,12 +13,15 @@ namespace Client_Server_App.Game;
 [JsonDerivedType(typeof(JoinedRecord), "joined")]
 [JsonDerivedType(typeof(LeftRecord), "left")]
 [JsonDerivedType(typeof(ErrorRecord), "error")]
+[JsonDerivedType(typeof(HelloRecord), "hello")]
 internal abstract record GameEnvelope;
 
 internal sealed record MoveRequestRecord(int Cell) : GameEnvelope;
 
 internal sealed record RematchOfferRecord : GameEnvelope;
 
+/// <summary>Authoritative game snapshot. Seat names and the outstanding rematch
+/// offer ride along so clients never need extra request/response round-trips.</summary>
 internal sealed record GameStateRecord(
     IReadOnlyList<string> Board,
     string Turn,
@@ -27,11 +30,18 @@ internal sealed record GameStateRecord(
     IReadOnlyList<int>? WinningLine,
     int Round,
     string Room = "",
-    string? WinnerReason = null) : GameEnvelope;
+    string? WinnerReason = null,
+    string? XName = null,
+    string? OName = null,
+    string? RematchOfferedBy = null) : GameEnvelope;
 
 internal sealed record CreateRoomRecord(string Name) : GameEnvelope;
 
 internal sealed record JoinRoomRecord(string Name) : GameEnvelope;
+
+/// <summary>First message on every connection (including reconnects): announces
+/// the player's display name so the referee can identify them from then on.</summary>
+internal sealed record HelloRecord(string PlayerName = "") : GameEnvelope;
 
 internal sealed record LeaveRoomRecord : GameEnvelope;
 

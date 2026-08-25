@@ -60,7 +60,7 @@ public partial class ConnectionWindow : Window
                 return fresh;
             }
 
-            PlayerSession session = new(ConnectFactory);
+            PlayerSession session = new(ConnectFactory, displayName: NameTextBox.Text);
             await session.ConnectAsync();
 
             OpenLobbyWindow(

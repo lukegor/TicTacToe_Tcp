@@ -31,14 +31,14 @@ public sealed class TicTacToeRoomsEndToEndTests
         }
     }
 
-    private static PlayerSession Connect(TestServer server)
+    private static PlayerSession Connect(TestServer server, string? displayName = null)
     {
         PlayerSession session = new(async () =>
         {
             ClientTcp transport = new();
             await transport.ConnectAsync("127.0.0.1", server.Port);
             return transport;
-        });
+        }, displayName: displayName);
         session.ConnectAsync().GetAwaiter().GetResult();
         return session;
     }
@@ -66,22 +66,49 @@ public sealed class TicTacToeRoomsEndToEndTests
     }
 
     [Fact]
+    public async Task ClientConnectingAfterRoomExists_ReceivesInitialRoomList()
+    {
+        using TestServer server = new(TimeSpan.FromSeconds(10));
+        using PlayerSession first = Connect(server);
+
+        await first.CreateRoomAsync("early");
+        await WaitForAsync(() => first.CurrentState is not null, "first seated");
+
+        using PlayerSession late = Connect(server);
+
+        await WaitForAsync(
+            () => late.LatestRooms.Any(room => room.Name == "early"),
+            "late joiner sees the room created before it connected");
+    }
+
+    [Fact]
     public async Task TwoPlayersAndSpectator_FullGame_RematchSwapsMarks()
     {
         using TestServer server = new(TimeSpan.FromSeconds(10));
-        using PlayerSession host = Connect(server);
-        using PlayerSession guest = Connect(server);
+        using PlayerSession host = Connect(server, "Alice");
+        using PlayerSession guest = Connect(server, "Bob");
         using PlayerSession spectator = Connect(server);
 
         await host.CreateRoomAsync("duel");
         await WaitForAsync(() => host.CurrentState is not null && host.MyMark == "X", "host seated as X");
 
+        // A lone host is waiting and cannot pre-play the round.
+        Assert.Equal("waiting", host.CurrentState!.Status);
+        await host.PlayCellAsync(8);
+
         await guest.JoinRoomAsync("duel");
         await WaitForAsync(() => guest.CurrentState is not null && guest.MyMark == "O", "guest seated as O");
+        await WaitForAsync(() => host.CurrentState!.Status == "inProgress", "game started");
+        Assert.All(host.CurrentState!.Board, cell => Assert.Equal("", cell)); // premature move rejected
 
         await spectator.JoinRoomAsync("duel");
         await WaitForAsync(() => spectator.CurrentState is not null, "spectator watching");
         Assert.True(spectator.IsSpectator);
+
+        // Names announced at create/join time are visible to every room member.
+        Assert.Equal("Alice", host.CurrentState!.XName);
+        Assert.Equal("Bob", guest.CurrentState!.OName);
+        await WaitForAsync(() => guest.CurrentState!.XName == "Alice", "guest sees opponent name");
 
         // X:0, O:3, X:1, O:4, X:6, O:5 -> O wins [3,4,5].
         await MoveAndAwait(host, guest, host, 0);
@@ -97,8 +124,16 @@ public sealed class TicTacToeRoomsEndToEndTests
         Assert.Equal("O", guest.CurrentState!.Winner);
         Assert.Equal(ExpectedWinningLine, guest.CurrentState!.WinningLine!.ToArray());
 
-        // Rematch: both vote (order-independent); marks swap; X starts round 2.
+        // Rematch: the lone offer is visible to the challenged side before the
+        // second vote arrives; then both vote (order-independent) and marks swap.
         await guest.SendRematchOfferAsync();
+        await WaitForAsync(
+            () => host.CurrentState!.RematchOfferedBy == "O",
+            "host sees Bob's rematch challenge");
+        await WaitForAsync(
+            () => spectator.CurrentState!.RematchOfferedBy == "O",
+            "spectator sees the rematch offer");
+
         await host.SendRematchOfferAsync();
 
         await WaitForAsync(() => host.CurrentState!.Round == 2, "round 2 on host");
@@ -107,6 +142,9 @@ public sealed class TicTacToeRoomsEndToEndTests
         await WaitForAsync(() => host.MyMark == "O" && guest.MyMark == "X", "marks swapped");
         Assert.Equal("X", host.CurrentState!.Turn);
         Assert.All(host.CurrentState!.Board, cell => Assert.Equal("", cell));
+        Assert.Null(host.CurrentState!.RematchOfferedBy); // votes cleared on restart
+        Assert.Equal("Bob", host.CurrentState!.XName);    // names followed their seats
+        Assert.Equal("Alice", host.CurrentState!.OName);
     }
 
     [Fact]

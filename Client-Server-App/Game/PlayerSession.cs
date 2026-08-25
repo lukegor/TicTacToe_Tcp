@@ -36,10 +36,21 @@ internal sealed class PlayerSession : IDisposable
     public GameStateRecord? CurrentState { get; private set; }
     public IReadOnlyList<RoomInfoRecord> LatestRooms { get; private set; } = [];
 
-    public PlayerSession(Func<Task<IClientTransport>> connectFactory, TimeSpan? reconnectBudget = null)
+    public PlayerSession(Func<Task<IClientTransport>> connectFactory, TimeSpan? reconnectBudget = null, string? displayName = null)
     {
         _connectFactory = connectFactory;
         _reconnectBudget = reconnectBudget ?? DefaultReconnectBudget;
+        DisplayName = ResolveDisplayName(displayName);
+    }
+
+    /// <summary>Name announced to the referee via <c>hello</c> on every connection
+    /// (initial and reconnect); a guest name is generated when skipped.</summary>
+    public string DisplayName { get; }
+
+    public static string ResolveDisplayName(string? candidate)
+    {
+        string trimmed = (candidate ?? string.Empty).Trim();
+        return trimmed.Length > 0 ? trimmed : $"Guest-{Random.Shared.Next(1000, 10000)}";
     }
 
     /// <summary>Opens the first connection. Throws when the server is unreachable.</summary>
@@ -47,8 +58,15 @@ internal sealed class PlayerSession : IDisposable
     {
         IClientTransport transport = await _connectFactory().ConfigureAwait(true);
         AttachTransport(transport);
+        transport.Start();
+        await SendHelloAsync(transport).ConfigureAwait(true);
         State = PlayerSessionState.Lobby;
     }
+
+    /// <summary>Announces the display name; must precede any room request so the
+    /// referee can attribute the connection. TCP ordering guarantees delivery.</summary>
+    private async Task SendHelloAsync(IClientTransport transport) =>
+        await transport.SendLineAsync(GameJson.Serialize(new HelloRecord(DisplayName))).ConfigureAwait(false);
 
     public async Task CreateRoomAsync(string name) =>
         await SendAsync(new CreateRoomRecord(name)).ConfigureAwait(true);
@@ -186,6 +204,8 @@ internal sealed class PlayerSession : IDisposable
             {
                 IClientTransport transport = await _connectFactory().ConfigureAwait(false);
                 AttachTransport(transport);
+                transport.Start();
+                await SendHelloAsync(transport).ConfigureAwait(false);
 
                 // Only an ack confirming the intended seat settles the loop;
                 // a spectator mis-seat returns false and we retry.
@@ -290,7 +310,13 @@ internal sealed class PlayerSession : IDisposable
         }
         catch (Exception ex) when (ex is ObjectDisposedException or IOException or SocketException or InvalidOperationException)
         {
-            // Broken pipe: the Disconnected event drives recovery.
+            if (State is PlayerSessionState.Seated or PlayerSessionState.Reconnecting)
+            {
+                return; // Broken pipe: the Disconnected event drives recovery.
+            }
+
+            // Lobby-state requests must not vanish silently; the caller reports this.
+            throw new InvalidOperationException("The connection to the server is down.", ex);
         }
     }
 

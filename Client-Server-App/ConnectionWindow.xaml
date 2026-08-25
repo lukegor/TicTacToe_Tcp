@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Connection" Height="420" Width="560"
+        Title="Connection" Height="480" Width="560"
         WindowStartupLocation="CenterScreen">
 	<Grid Margin="12">
 		<Grid.RowDefinitions>
@@ -26,6 +26,8 @@
 				<TextBox x:Name="AddressTextBox" Width="200" Margin="0,0,0,10" Text="127.0.0.1" />
 				<TextBlock Text="Port:" Margin="0,0,0,5" />
 				<TextBox x:Name="PortTextBox" Width="200" Margin="0,0,0,10" Text="1111" />
+				<TextBlock Text="Your name (optional):" Margin="0,0,0,5" />
+				<TextBox x:Name="NameTextBox" Width="200" MaxLength="30" Margin="0,0,0,10" />
 				<Button x:Name="ConnectButton" Content="Connect" Width="100" Click="ConnectButton_Click" />
 			</StackPanel>
 

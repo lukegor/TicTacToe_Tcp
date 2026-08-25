@@ -14,6 +14,7 @@ public partial class LobbyWindow : Window
     {
         _session = session;
         InitializeComponent();
+        Title = $"Lobby — {session.DisplayName}";
         session.RoomsUpdated += OnRoomsUpdated;
         session.Seated += OnSeated;
         session.ReturnedToLobby += OnReturnedToLobby;
@@ -25,7 +26,10 @@ public partial class LobbyWindow : Window
     private void OnRoomsUpdated(IReadOnlyList<RoomInfoRecord> rooms) =>
         Dispatcher.BeginInvoke(() => RoomsList.ItemsSource = rooms.ToList());
 
-    private void OnSeated(JoinedRecord joined)
+    private void OnSeated(JoinedRecord joined) =>
+        Dispatcher.BeginInvoke(OpenGameWindow);
+
+    private void OpenGameWindow()
     {
         if (_gameWindow is not null)
         {
@@ -43,15 +47,16 @@ public partial class LobbyWindow : Window
         Hide();
     }
 
-    private void OnReturnedToLobby(string reason)
-    {
-        if (!IsVisible && _gameWindow is null)
+    private void OnReturnedToLobby(string reason) =>
+        Dispatcher.BeginInvoke(() =>
         {
-            Show();
-        }
+            if (!IsVisible && _gameWindow is null)
+            {
+                Show();
+            }
 
-        RoomsList.ItemsSource = _session.LatestRooms.ToList();
-    }
+            RoomsList.ItemsSource = _session.LatestRooms.ToList();
+        });
 
     private async void CreateButton_Click(object sender, RoutedEventArgs e)
     {
@@ -91,7 +96,7 @@ public partial class LobbyWindow : Window
     }
 
     private void AppendNotice(string message) =>
-        OutputTextBox.AppendText(message + Environment.NewLine);
+        Dispatcher.BeginInvoke(() => OutputTextBox.AppendText(message + Environment.NewLine));
 
     protected override void OnClosed(EventArgs e)
     {
