@@ -111,7 +111,10 @@ public partial class ConnectionWindow : Window
             return;
         }
 
-        window.Owner = this;
+        if (IsVisible)
+        {
+            window.Owner = this;
+        }
         window.Closed += (_, _) => onClose();
         window.Show();
     }
@@ -162,7 +165,10 @@ public partial class ConnectionWindow : Window
             return;
         }
 
-        window.Owner = this;
+        if (IsVisible)
+        {
+            window.Owner = this;
+        }
         window.Closed += (_, _) => onClose();
         window.Show();
     }

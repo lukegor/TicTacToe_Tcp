@@ -7,14 +7,19 @@ namespace ClientServer.App;
 
 public partial class App : Application
 {
-    internal static ILoggerFactory LoggerFactory { get; private set; } = null!;
+    private static ILoggerFactory? _loggerFactory;
+
+    /// <summary>Lazily created so windows remain constructible without a running
+    /// Application (UI tests); the real app initializes it in OnStartup.</summary>
+    internal static ILoggerFactory LoggerFactory =>
+        _loggerFactory ??= new SingleProviderLoggerFactory(new FileLoggerProvider(new LogConfig()));
 
     private CrashHandler? _crash;
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        LoggerFactory = new SingleProviderLoggerFactory(new FileLoggerProvider(new LogConfig()));
+        _ = LoggerFactory;
 
         _crash = new CrashHandler(LoggerFactory.CreateLogger<CrashHandler>(), new MessageBoxCrashReporter());
         DispatcherUnhandledException += (_, args) =>
@@ -42,7 +47,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        LoggerFactory.Dispose();
+        _loggerFactory?.Dispose();
         base.OnExit(e);
     }
 }
