@@ -3,5 +3,6 @@
   <Project Path="src/Client-Server-App/Client-Server-App.csproj" />
   <Folder Name="/tests/">
     <Project Path="tests/Client-Server-App.Tests/Client-Server-App.Tests.csproj" />
+    <Project Path="tests/Client-Server-App.UiTests/Client-Server-App.UiTests.csproj" />
   </Folder>
 </Solution>

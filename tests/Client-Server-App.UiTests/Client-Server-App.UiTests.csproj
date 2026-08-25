@@ -2,20 +2,26 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <IsPackable>false</IsPackable>
-    <RootNamespace>ClientServer.Tests</RootNamespace>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>ClientServer.UiTests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+    <PackageReference Include="Xunit.StaFact" />
     <PackageReference Include="xunit.v3" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\TestSupport\**\*.cs" LinkBase="TestSupport" />
     <ProjectReference Include="..\..\src\Client-Server-App.Core\Client-Server-App.Core.csproj" />
+    <ProjectReference Include="..\..\src\Client-Server-App\Client-Server-App.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\TestSupport\**\*.cs" LinkBase="TestSupport" />
   </ItemGroup>
 
 </Project>

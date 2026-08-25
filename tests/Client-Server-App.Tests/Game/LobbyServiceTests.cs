@@ -1,5 +1,5 @@
 using ClientServer.Core.Game;
-using ClientServer.Tests.TestDoubles;
+using ClientServer.TestSupport;
 using Xunit;
 
 namespace ClientServer.Tests.Game;

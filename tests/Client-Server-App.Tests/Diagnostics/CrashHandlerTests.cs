@@ -1,5 +1,5 @@
 using ClientServer.Core.Diagnostics;
-using ClientServer.Tests.TestDoubles;
+using ClientServer.TestSupport;
 using Microsoft.Extensions.Logging;
 using Xunit;
 

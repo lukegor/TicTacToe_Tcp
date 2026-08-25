@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using ClientServer.Core.Game;
 using ClientServer.Core.Transports;
-using ClientServer.Tests.TestDoubles;
+using ClientServer.TestSupport;
 using Xunit;
 
 namespace ClientServer.Tests.Game;

@@ -9,6 +9,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <InternalsVisibleTo Include="Client-Server-App" />
     <InternalsVisibleTo Include="Client-Server-App.Tests" />
+    <InternalsVisibleTo Include="Client-Server-App.UiTests" />
   </ItemGroup>
 
 </Project>

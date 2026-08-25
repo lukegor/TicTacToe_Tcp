@@ -1,7 +1,7 @@
 using ClientServer.Core.Game;
 using ClientServer.Core.Transports;
 
-namespace ClientServer.Tests.TestDoubles;
+namespace ClientServer.TestSupport;
 
 public sealed class FakeServerTransport : IServerTransport
 {
