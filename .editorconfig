@@ -489,22 +489,15 @@ dotnet_diagnostic.MA0197.severity = none
 dotnet_diagnostic.NU1902.severity = suggestion
 
 
+# Shippable sources: src/Client-Server-App.Core/** and src/Client-Server-App/**
 [**/src/**/*.cs]
 
 # Add a 'protected' constructor or the 'static' keyword to the class declaration.
 dotnet_diagnostic.S1118.severity = none
 
 
-# Migrations (generated code)
-[**/Migrations/*.cs]
-
-# Underscores in generated names
-dotnet_diagnostic.CA1707.severity = none
-
-# Prefer 'static readonly' fields over constant array arguments if the called method is called repeatedly and is not mutating the passed array
-dotnet_diagnostic.CA1861.severity = none
-
-
+# Test projects: tests/Client-Server-App.Tests/** and tests/Client-Server-App.UiTests/**
+# (also covers the link-compiled tests/TestSupport/** sources)
 [**/tests/**/*.cs]
 
 # Underscores in generated names
@@ -520,5 +513,6 @@ dotnet_diagnostic.S6966.severity = none
 dotnet_diagnostic.MA0042.severity = suggestion
 
 
+# Generated WPF/XAML code under any project's obj/
 [**/obj/**/*.cs]
 generated_code = true
