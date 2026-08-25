@@ -52,6 +52,15 @@ dotnet publish src/Client-Server-App -c Release -p:PublishProfile=win-x64
 
 Output lands in `src/Client-Server-App/bin/Release/net10.0-windows/publish/win-x64/`.
 
+## Testing
+
+```shell
+./scripts/run-tests.ps1            # runs all suites and enforces the coverage gate
+```
+
+UI suites require Windows (WPF). Coverage is merged across suites via ReportGenerator;
+the gate currently requires **83%** combined line coverage.
+
 ## Docker
 
 `Dockerfile` produces reproducible, self-contained builds inside Windows containers:
