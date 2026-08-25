@@ -1,3 +1,4 @@
+using System.Windows;
 using System.Windows.Automation.Peers;
 using System.Windows.Automation.Provider;
 using System.Windows.Controls;
@@ -25,4 +26,9 @@ public static class UiAssert
             return false;
         }
     }
+
+    /// <summary>Simulates typing into a TextBox: updates the current value
+    /// without destroying the active binding (plain assignment would).</summary>
+    public static void Type(TextBox box, string text) =>
+        box.SetCurrentValue(System.Windows.Controls.TextBox.TextProperty, text);
 }

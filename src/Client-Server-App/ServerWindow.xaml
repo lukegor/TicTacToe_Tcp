@@ -4,36 +4,42 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Referee" Height="420" Width="520"
+        Title="Referee" Height="420" Width="480"
         ResizeMode="NoResize" WindowStartupLocation="CenterOwner">
 	<Grid Margin="12">
 		<Grid.RowDefinitions>
-			<RowDefinition Height="Auto" />
 			<RowDefinition Height="*" />
-			<RowDefinition Height="Auto" />
-			<RowDefinition Height="150" />
+			<RowDefinition Height="110" />
 		</Grid.RowDefinitions>
 
-		<Grid Grid.Row="0" Margin="0,0,0,4">
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="*" />
-				<ColumnDefinition Width="90" />
-				<ColumnDefinition Width="100" />
-			</Grid.ColumnDefinitions>
-			<TextBlock Text="Room" FontWeight="Bold" />
-			<TextBlock Grid.Column="1" FontWeight="Bold" Text="Players" />
-			<TextBlock Grid.Column="2" FontWeight="Bold" Text="Spectators" />
-		</Grid>
+		<!-- Live room table -->
+		<ItemsControl x:Name="RoomsPanel" Grid.Row="0" ItemsSource="{Binding Rooms}">
+			<ItemsControl.ItemTemplate>
+				<DataTemplate>
+					<Grid Margin="0,2,0,2">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="*" />
+							<ColumnDefinition Width="90" />
+							<ColumnDefinition Width="100" />
+						</Grid.ColumnDefinitions>
+						<TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+						<TextBlock Grid.Column="1" Text="{Binding Players, StringFormat={}{0}/2}"
+						           VerticalAlignment="Center" />
+						<TextBlock Grid.Column="2" Text="{Binding Spectators}"
+						           VerticalAlignment="Center" />
+					</Grid>
+				</DataTemplate>
+			</ItemsControl.ItemTemplate>
+		</ItemsControl>
 
-		<StackPanel x:Name="RoomsPanel" Grid.Row="1" />
-
-		<TextBlock Grid.Row="2" Text="Events" FontWeight="Bold" Margin="0,8,0,4" />
-
+		<!-- Event log -->
 		<TextBox x:Name="OutputTextBox"
-				 Grid.Row="3"
+				 Grid.Row="1"
+				 Margin="0,8,0,0"
 				 IsReadOnly="True"
 				 FontFamily="Consolas"
 				 TextWrapping="Wrap"
-				 VerticalScrollBarVisibility="Auto" />
+				 VerticalScrollBarVisibility="Auto"
+				 Text="{Binding LogText}" />
 	</Grid>
 </Window>

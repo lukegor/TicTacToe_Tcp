@@ -23,20 +23,26 @@
 			<StackPanel Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Top">
 				<TextBlock Text="Connect" FontWeight="Bold" Margin="0,0,0,10" />
 				<TextBlock Text="IP Address:" Margin="0,0,0,5" />
-				<TextBox x:Name="AddressTextBox" Width="200" Margin="0,0,0,10" Text="127.0.0.1" />
+				<TextBox x:Name="AddressTextBox" Width="200" Margin="0,0,0,10"
+				         Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}" />
 				<TextBlock Text="Port:" Margin="0,0,0,5" />
-				<TextBox x:Name="PortTextBox" Width="200" Margin="0,0,0,10" Text="1111" />
+				<TextBox x:Name="PortTextBox" Width="200" Margin="0,0,0,10"
+				         Text="{Binding Port, UpdateSourceTrigger=PropertyChanged}" />
 				<TextBlock Text="Your name (optional):" Margin="0,0,0,5" />
-				<TextBox x:Name="NameTextBox" Width="200" MaxLength="30" Margin="0,0,0,10" />
-				<Button x:Name="ConnectButton" Content="Connect" Width="100" Click="ConnectButton_Click" />
+				<TextBox x:Name="NameTextBox" Width="200" MaxLength="30" Margin="0,0,0,10"
+				         Text="{Binding PlayerName, UpdateSourceTrigger=PropertyChanged}" />
+				<Button x:Name="ConnectButton" Content="Connect" Width="100"
+				        Command="{Binding ConnectCommand}" />
 			</StackPanel>
 
 			<!-- Host Section -->
 			<StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Top">
 				<TextBlock Text="Host" FontWeight="Bold" Margin="0,0,0,10" />
 				<TextBlock Text="Port:" Margin="0,0,0,5" />
-				<TextBox x:Name="HostPortTextBox" Width="200" Margin="0,0,0,10" Text="1111" />
-				<Button x:Name="HostButton" Content="Create Host" Width="100" Click="HostButton_Click" />
+				<TextBox x:Name="HostPortTextBox" Width="200" Margin="0,0,0,10"
+				         Text="{Binding HostPort, UpdateSourceTrigger=PropertyChanged}" />
+				<Button x:Name="HostButton" Content="Create Host" Width="100"
+				        Command="{Binding HostCommand}" />
 			</StackPanel>
 		</Grid>
 
@@ -49,6 +55,7 @@
 				 FontFamily="Consolas"
 				 TextWrapping="Wrap"
 				 VerticalScrollBarVisibility="Auto"
-				 VerticalContentAlignment="Top" />
+				 VerticalContentAlignment="Top"
+				 Text="{Binding LogText}" />
 	</Grid>
 </Window>

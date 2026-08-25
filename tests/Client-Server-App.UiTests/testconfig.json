@@ -1,0 +1,4 @@
+{
+  "$schema": "https://xunit.net/schema/v3.1/config.schema.json",
+  "parallelizeTestCollections": false
+}

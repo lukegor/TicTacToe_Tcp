@@ -22,6 +22,22 @@ public sealed class ServerWindowTests : IDisposable
     private static void Hello(FakeServerTransport t, Guid id, string name) =>
         t.ReceiveLine(id, GameJson.Serialize(new HelloRecord(name)));
 
+    private static void RealizeRooms(ServerWindow window)
+    {
+        window.RoomsPanel.Measure(new System.Windows.Size(400, 300));
+        window.RoomsPanel.Arrange(new System.Windows.Rect(0, 0, 400, 300));
+        window.RoomsPanel.UpdateLayout();
+    }
+
+    private static IReadOnlyList<string[]> RowTexts(ServerWindow window)
+    {
+        RealizeRooms(window);
+        return VisualTreeEx.FindChildren<System.Windows.Controls.Grid>(window.RoomsPanel)
+            .Select(g => g.Children.OfType<TextBlock>().Select(t => t.Text).ToArray())
+            .Where(a => a.Length == 3)
+            .ToList();
+    }
+
     [WpfFact]
     public async Task TwoPlayersSeated_RendersSingleRoomRow_WithCounts()
     {
@@ -35,27 +51,27 @@ public sealed class ServerWindowTests : IDisposable
         ServerWindow window = HeadlessWindow.Prepare(new ServerWindow(_lobby, 1234));
         await TestDispatcher.FlushAsync();
 
-        Assert.Single(window.RoomsPanel.Children);
-        var texts = ((Grid)window.RoomsPanel.Children[0]).Children
-            .OfType<TextBlock>().Select(t => t.Text).ToList();
-        Assert.Equal(["duel", "2/2", "0"], texts);
+        var rows = RowTexts(window);
+        _ = Assert.Single(rows);
+        Assert.Equal(["duel", "2/2", "0"], rows[0]);
     }
 
     [WpfFact]
     public async Task MembershipChange_RerendersRows()
     {
         ServerWindow window = HeadlessWindow.Prepare(new ServerWindow(_lobby, 1234));
-        Assert.Empty(window.RoomsPanel.Children);
+        await TestDispatcher.FlushAsync();
+        Assert.Empty(RowTexts(window));
 
         Guid a = _transport.SimulateClientConnected();
         Hello(_transport, a, "Alice");
         _transport.ReceiveLine(a, GameJson.Serialize(new CreateRoomRecord("duel")));
         await TestDispatcher.FlushAsync();
-        Assert.Single(window.RoomsPanel.Children);
+        _ = Assert.Single(RowTexts(window));
 
         _transport.SimulateClientDisconnected(a); // lone host drop closes the room
         await TestDispatcher.FlushAsync();
-        Assert.Empty(window.RoomsPanel.Children);
+        Assert.Empty(RowTexts(window));
     }
 
     [WpfFact]
@@ -76,7 +92,7 @@ public sealed class ServerWindowTests : IDisposable
         ServerWindow window = HeadlessWindow.Prepare(new ServerWindow(_lobby, 1234));
         await TestDispatcher.FlushAsync();
 
-        Assert.Empty(window.RoomsPanel.Children);
+        Assert.Empty(window.RoomsPanel.Items);
         Assert.Equal(string.Empty, window.OutputTextBox.Text);
     }
 }

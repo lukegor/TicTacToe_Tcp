@@ -54,6 +54,10 @@ internal sealed class ClientTcp : IClientTransport, IDisposable
         {
             AutoFlush = true,
         };
+        File.AppendAllText(
+            Path.Combine(AppContext.BaseDirectory, "artifacts", "vmdiag.log"),
+            $"ASSIGN hash={System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(this)}" +
+            $" sockConnected={client.Connected}{Environment.NewLine}");
         _logger.LogDebug("Connected to {Host}:{Port}.", host, port);
     }
 
@@ -61,7 +65,7 @@ internal sealed class ClientTcp : IClientTransport, IDisposable
     public void Start()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        TcpClient? client = _client ?? throw new InvalidOperationException("The client is not connected.");
+        TcpClient? client = _client ?? throw new InvalidOperationException($"The client is not connected. [diag hash={System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(this)} assigned={_client is not null} connected={_client?.Connected}]");
         if (Interlocked.Exchange(ref _receiving, 1) != 0)
         {
             return;

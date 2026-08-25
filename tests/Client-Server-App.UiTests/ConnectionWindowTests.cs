@@ -3,6 +3,7 @@ using System.Net.Sockets;
 using System.Windows.Automation.Peers;
 using System.Windows.Controls;
 using ClientServer.App;
+using ClientServer.App.ViewModels;
 using ClientServer.Core.Game;
 using ClientServer.Core.Transports;
 using ClientServer.TestSupport;
@@ -35,8 +36,12 @@ public sealed class ConnectionWindowTests
 
     private static ConnectionWindow NewWindow(
         Func<LobbyWindow, bool>? lobbyProbe = null,
-        Func<ServerWindow, bool>? refereeProbe = null) =>
-        HeadlessWindow.Prepare(new ConnectionWindow(lobbyProbe, refereeProbe));
+        Func<ServerWindow, bool>? refereeProbe = null)
+    {
+        var window = HeadlessWindow.Prepare(new ConnectionWindow(lobbyProbe, refereeProbe, null));
+        window.Show(); // off-screen: activates the full binding pipeline
+        return window;
+    }
 
     private static void Press(Button button) =>
         ((System.Windows.Automation.Provider.IInvokeProvider)new ButtonAutomationPeer(button)).Invoke();
@@ -88,8 +93,8 @@ public sealed class ConnectionWindowTests
         LobbyWindow? opened = null;
         ConnectionWindow window = NewWindow(lobbyProbe: w => { opened = w; return true; });
 
-        window.AddressTextBox.Text = "127.0.0.1";
-        window.PortTextBox.Text = server.Port.ToString();
+        UiAssert.Type(window.AddressTextBox, "127.0.0.1");
+        UiAssert.Type(window.PortTextBox, server.Port.ToString());
         Press(window.ConnectButton);
 
         await WaitForAsync(() => opened is not null);
@@ -110,8 +115,8 @@ public sealed class ConnectionWindowTests
             lobbyProbe: _ => { openedAny = true; return true; },
             refereeProbe: _ => { openedAny = true; return true; });
 
-        window.AddressTextBox.Text = "";
-        window.PortTextBox.Text = "1111";
+        UiAssert.Type(window.AddressTextBox, "");
+        UiAssert.Type(window.PortTextBox, "1111");
         Press(window.ConnectButton);
         await TestDispatcher.FlushAsync();
 
@@ -127,8 +132,8 @@ public sealed class ConnectionWindowTests
     public async Task Connect_InvalidPort_ShowsPortError(string port)
     {
         ConnectionWindow window = NewWindow();
-        window.AddressTextBox.Text = "127.0.0.1";
-        window.PortTextBox.Text = port;
+        UiAssert.Type(window.AddressTextBox, "127.0.0.1");
+        UiAssert.Type(window.PortTextBox, port);
         Press(window.ConnectButton);
         await TestDispatcher.FlushAsync();
 
@@ -145,8 +150,8 @@ public sealed class ConnectionWindowTests
             lobbyProbe: _ => { openedAny = true; return true; },
             refereeProbe: _ => { openedAny = true; return true; });
 
-        window.AddressTextBox.Text = "127.0.0.1";
-        window.PortTextBox.Text = deadPort.ToString();
+        UiAssert.Type(window.AddressTextBox, "127.0.0.1");
+        UiAssert.Type(window.PortTextBox, deadPort.ToString());
         Press(window.ConnectButton);
 
         await WaitForAsync(() => window.OutputTextBox.Text.Contains("Connection failed:"));
@@ -164,7 +169,7 @@ public sealed class ConnectionWindowTests
         ConnectionWindow window = NewWindow(refereeProbe: w => { opened = w; return true; });
         int port = GetFreePort();
 
-        window.HostPortTextBox.Text = port.ToString();
+        UiAssert.Type(window.HostPortTextBox, port.ToString());
         Press(window.HostButton);
 
         await WaitForAsync(() => opened is not null);
@@ -181,7 +186,7 @@ public sealed class ConnectionWindowTests
     {
         using PortHolder holder = new(); // occupies a live port
         ConnectionWindow window = NewWindow();
-        window.HostPortTextBox.Text = holder.Port.ToString();
+        UiAssert.Type(window.HostPortTextBox, holder.Port.ToString());
 
         Press(window.HostButton);
         await TestDispatcher.FlushAsync();
@@ -197,9 +202,9 @@ public sealed class ConnectionWindowTests
         LobbyWindow? opened = null;
         ConnectionWindow window = NewWindow(lobbyProbe: w => { opened = w; return true; });
 
-        window.AddressTextBox.Text = "127.0.0.1";
-        window.PortTextBox.Text = server.Port.ToString();
-        window.NameTextBox.Text = "              Alice              ";
+        UiAssert.Type(window.AddressTextBox, "127.0.0.1");
+        UiAssert.Type(window.PortTextBox, server.Port.ToString());
+        UiAssert.Type(window.NameTextBox, "              Alice              ");
         Press(window.ConnectButton);
 
         await WaitForAsync(() => opened is not null);

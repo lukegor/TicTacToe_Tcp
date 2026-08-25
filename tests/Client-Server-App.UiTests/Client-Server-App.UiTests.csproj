@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <Compile Include="..\TestSupport\**\*.cs" LinkBase="TestSupport" />
+    <None Include="testconfig.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

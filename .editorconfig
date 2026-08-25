@@ -400,6 +400,10 @@ dotnet_naming_style.s_camelcase.capitalization = camel_case
 
 # CA performance rules
 
+# Types own disposable fields but release them in lifecycle hooks (e.g., WPF
+# windows disposing VMs in OnClosed) — verified manually, keep as suggestion.
+dotnet_diagnostic.CA1001.severity = suggestion
+
 # Rename type name so it does not end in 'ending'
 dotnet_diagnostic.CA1711.severity = suggestion
 
