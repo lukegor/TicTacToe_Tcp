@@ -24,6 +24,7 @@ tests for the isolated decision logic.
 | Existing UI tests | All 38 stay untouched and must remain green — they become the binding-wiring regression net |
 | New tests | One headless `…ViewModelTests` file per migrated window (plain `[Fact]`, inline dispatcher, existing fakes); ~18–22 tests covering decision branches |
 | Text inputs | `UpdateSourceTrigger=PropertyChanged` on every bound input so programmatic `.Text=` pushes to the VM without focus changes |
+| Property implementation | Default observable state uses `[ObservableProperty]` partial properties. Wherever a property needs custom accessor logic, prefer the **C# 14 `field` keyword** over declaring manual backing fields (available out of the box on `net10.0`; no `preview` LangVersion). Explicit `_camelCase` fields remain only for true non-property state |
 
 ## Architecture
 
