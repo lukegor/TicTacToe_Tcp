@@ -232,7 +232,7 @@ public sealed class LobbyServiceTests
 
         _transport.SimulateClientDisconnected(second);
 
-        await Task.Delay(250);
+        await Task.Delay(250, TestContext.Current.CancellationToken);
         GameStateRecord state = LastState(creator);
         Assert.Equal("won", state.Status);
         Assert.Equal("X", state.Winner);

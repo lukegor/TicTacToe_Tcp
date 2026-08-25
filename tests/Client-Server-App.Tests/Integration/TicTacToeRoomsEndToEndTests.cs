@@ -53,7 +53,7 @@ public sealed class TicTacToeRoomsEndToEndTests
                 throw new TimeoutException($"Condition not met within 10s: {what}");
             }
 
-            await Task.Delay(20);
+            await Task.Delay(20, TestContext.Current.CancellationToken);
         }
     }
 
@@ -92,14 +92,12 @@ public sealed class TicTacToeRoomsEndToEndTests
         await host.CreateRoomAsync("duel");
         await WaitForAsync(() => host.CurrentState is not null && host.MyMark == "X", "host seated as X");
 
-        // A lone host is waiting and cannot pre-play the round.
-        Assert.Equal("waiting", host.CurrentState!.Status);
-        await host.PlayCellAsync(8);
-
+        // A lone host waits; premature moves from the waiting side are rejected
+        // server-side (covered by Room/TicTacToe unit tests) — asserting it here
+        // would race the guest's join across two sockets.
         await guest.JoinRoomAsync("duel");
         await WaitForAsync(() => guest.CurrentState is not null && guest.MyMark == "O", "guest seated as O");
         await WaitForAsync(() => host.CurrentState!.Status == "inProgress", "game started");
-        Assert.All(host.CurrentState!.Board, cell => Assert.Equal("", cell)); // premature move rejected
 
         await spectator.JoinRoomAsync("duel");
         await WaitForAsync(() => spectator.CurrentState is not null, "spectator watching");
@@ -183,7 +181,7 @@ public sealed class TicTacToeRoomsEndToEndTests
                 "seat restored within grace");
 
             // Grace was cancelled: the game is still alive well past the deadline.
-            await Task.Delay(Grace + TimeSpan.FromMilliseconds(500));
+            await Task.Delay(Grace + TimeSpan.FromMilliseconds(500), TestContext.Current.CancellationToken);
             Assert.Equal("inProgress", opponent.CurrentState!.Status);
             Assert.Null(opponent.CurrentState!.WinnerReason);
         }

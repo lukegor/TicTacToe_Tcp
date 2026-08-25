@@ -157,7 +157,7 @@ public sealed class RoomTests
         Assert.Equal("Alice", joined.State.XName); // opponent's name survives the drop
         Assert.Equal("Bob", joined.State.OName);   // restored seat re-announces its name
 
-        await Task.Delay(350); // original deadline passes
+        await Task.Delay(350, TestContext.Current.CancellationToken); // original deadline passes
         Assert.Equal("inProgress", LastState(x).Status);
         Assert.Equal(2, room.PlayerCount);
     }
@@ -174,7 +174,7 @@ public sealed class RoomTests
 
         room.HandleDisconnect(o);
 
-        await Task.Delay(250);
+        await Task.Delay(250, TestContext.Current.CancellationToken);
 
         GameStateRecord state = LastState(x);
         Assert.Equal("won", state.Status);
@@ -196,7 +196,7 @@ public sealed class RoomTests
 
         room.HandleDisconnect(x);
 
-        IReadOnlyList<Guid> evicted = await closed.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        IReadOnlyList<Guid> evicted = await closed.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         Assert.Empty(evicted);
         Assert.Equal(0, room.PlayerCount);
     }
@@ -374,7 +374,7 @@ public sealed class RoomTests
 
         // Each member was individually released; the close event carries whoever
         // remained at close time — nobody here.
-        IReadOnlyList<Guid> evicted = await closed.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        IReadOnlyList<Guid> evicted = await closed.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
         Assert.Empty(evicted);
         Assert.True(HasLine(x, "\"type\":\"left\""));
     }

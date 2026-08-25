@@ -246,7 +246,7 @@ public sealed class PlayerSessionTests
         Stopwatch clock = Stopwatch.StartNew();
         while (connections.Created.Count < 2 && clock.Elapsed < TimeSpan.FromSeconds(5))
         {
-            await Task.Delay(20);
+            await Task.Delay(20, TestContext.Current.CancellationToken);
         }
 
         Assert.True(reconnectingRaised);
@@ -284,7 +284,7 @@ public sealed class PlayerSessionTests
         Stopwatch clock = Stopwatch.StartNew();
         while (connections.Created.Count < 2 && clock.Elapsed < TimeSpan.FromSeconds(5))
         {
-            await Task.Delay(20);
+            await Task.Delay(20, TestContext.Current.CancellationToken);
         }
 
         FakeClientTransport replacement = connections.Created[1];
@@ -295,7 +295,7 @@ public sealed class PlayerSessionTests
         while (!replacement.SentLines.Any(l => l.Contains("\"type\":\"joinRoom\"", StringComparison.Ordinal))
                && clock.Elapsed < TimeSpan.FromSeconds(5))
         {
-            await Task.Delay(20);
+            await Task.Delay(20, TestContext.Current.CancellationToken);
         }
 
         replacement.ReceiveLine(GameJson.Serialize(new JoinedRecord("friday", null, false,
@@ -304,7 +304,7 @@ public sealed class PlayerSessionTests
         // Session sheds the spectator seat (leaveRoom) and retries the join.
         while (connections.Created.Count < 3 && clock.Elapsed < TimeSpan.FromSeconds(8))
         {
-            await Task.Delay(20);
+            await Task.Delay(20, TestContext.Current.CancellationToken);
         }
 
         Assert.True(
@@ -316,7 +316,7 @@ public sealed class PlayerSessionTests
         clock.Restart();
         while (third.SentLines.Count < 2 && clock.Elapsed < TimeSpan.FromSeconds(5))
         {
-            await Task.Delay(20);
+            await Task.Delay(20, TestContext.Current.CancellationToken);
         }
 
         Assert.Contains(replacement.SentLines, l => l.Contains("\"type\":\"leaveRoom\"", StringComparison.Ordinal));
@@ -347,7 +347,7 @@ public sealed class PlayerSessionTests
         Stopwatch clock = Stopwatch.StartNew();
         while (session.State != PlayerSessionState.Lobby && clock.Elapsed < TimeSpan.FromSeconds(8))
         {
-            await Task.Delay(20);
+            await Task.Delay(20, TestContext.Current.CancellationToken);
         }
 
         Assert.Equal(PlayerSessionState.Lobby, session.State);
