@@ -147,8 +147,8 @@ Until one fires, switching strategies is cost without payoff.
 - **Disabled buttons are asserted via `TryPress`**, which mirrors what a real
   user experiences (UIA refuses disabled elements) rather than forcing clicks.
 - **No sleeps anywhere**; async UI work drains via `TestDispatcher.FlushAsync()`.
-- Candidate future guard (backlog T5 territory): a self-scan test asserting no
-  method in the UiTests assembly calls `Window.Show`/`ShowDialog` directly,
+- Committed guard (implementation next, see §12): a self-scan test asserting
+  no method in the UiTests assembly calls `Window.Show`/`ShowDialog` directly,
   making any future UI-popping test a red build instead of a stray window.
 
 
@@ -211,3 +211,60 @@ modal surface is already seamed, and its scale keeps churn cheap — so the
 STA-driven strategy is the better fit today, layered on top of headless engine
 tests and interface seams, with explicit triggers set for when that balance
 should shift.
+
+## 12. Round 3 — Convergence (closing position)
+
+JSharp's response accepted the behavior-locus criterion as the missing
+independent variable, conceded that its round-2 "flake/harness cost" critique
+was overstated given this repo's harness discipline, and confirmed the pyramid
+argument targeted a position we do not hold. Applying our five-criterion rubric
+to *its own* repository produced A ≈ 17 / B ≈ 5: seams win there decisively,
+because JSharp's correctness lives in domain logic and its UI is dense with
+modality. Same rule, two repositories, two correct answers — nobody was wrong
+about their own codebase; the only error was universalizing either choice.
+
+**Adopted as the shared standard:** the five-criterion scoring table (§4) is now
+the inter-repository decision procedure for WPF UI test strategy. Re-score on
+any material change to behavior locus, modality density, CI topology, team
+churn, or binding/style density.
+
+### Per-repo closing scores
+
+| Repo | A (seams/headless) | B (STA-driven windows) | Winner | Backbone reality |
+| --- | --- | --- | --- | --- |
+| Client-Server-App (this repo) | 7 | 18 | B — view layer atop an 84-test headless base | Pyramid intact |
+| JSharp | ~17 | ~5 | A — seams as backbone, `[StaFact]` only for STA-typed construction | Pyramid intact |
+
+### Concessions ledger
+
+| Side | Conceded |
+| --- | --- |
+| JSharp → us | Round-2 overgeneralization; harness discipline neutralizes most structural B-costs; no pyramid inversion here; rubric adopted as shared standard |
+| Us → JSharp | The pyramid instinct is the correct general default when no headless base exists; "choose cheap failure modes" adopted verbatim; month-of-data metrics accepted |
+
+### Corrections to JSharp's surviving items
+
+1. **Compiled bindings are not "unaddressed"** — §9 above fact-checks them, and
+   the finding is symmetrical: `x:DataType`/`{x:Bind}` compiled bindings do not
+   exist in WPF (MAUI/WinUI-only; WPF's sole option is the third-party
+   `CompiledBindings.WPF`). JSharp's action item "adopt compiled bindings" is
+   therefore unavailable on its own stack too. The underlying concern (silent
+   binding-path bugs) stands for both repos; on WPF the mitigations are the
+   behavioral tests described in §6 or the third-party library, weighed
+   against dependency policy.
+2. **Call-level enforcement**: promoted from parked to committed. Next change
+   touching `tests/Client-Server-App.UiTests` adds the self-scan guard
+   (`System.Reflection.Metadata`, zero dependencies) asserting no method in the
+   UiTests assembly calls `Window.Show`/`ShowDialog`. Symmetric tripwire on the
+   JSharp side remains its type-dependency rule.
+
+### Metric commitments (re-evaluate after one month)
+
+| Metric | Baseline (2026-08-25) | Alarm threshold |
+| --- | --- | --- |
+| Full-suite wall time | ~6 s (122 tests) | > 30 s sustained |
+| Flake rate | 0 observed across all session runs | any reproducible flake |
+| Escaped UI/harness incidents | 1 (window flash; fixed same day) | ≥ 1 new per month |
+
+Either repo may call re-scoring at any time; the rubric, not preference,
+decides.
