@@ -151,7 +151,58 @@ Until one fires, switching strategies is cost without payoff.
   method in the UiTests assembly calls `Window.Show`/`ShowDialog` directly,
   making any future UI-popping test a red build instead of a stray window.
 
-## 9. Summary
+
+## 9. Rebuttal Round — Adjudication (2026-08-25, later the same day)
+
+The sibling repository responded with a full counter-proposal: "as the default
+backbone, seam-based headless testing wins clearly; real-window STA testing is
+legitimate only as a thin top layer." Its strongest pillar — that WPF's
+`x:DataType` compiled bindings turn silent binding-wiring bugs into compile
+errors, shrinking B's unique advantage to 1–5% of the suite — was fact-checked
+before adjudicating.
+
+**Finding: the factual pillar is false for WPF.** `x:DataType`/`{x:Bind}`
+compiled bindings are .NET MAUI and WinUI features. WPF has neither; the only
+WPF option is a third-party library (`CompiledBindings.WPF`) with its own
+markup namespace — i.e., adopting the recommendation means adding an external
+dependency and non-standard XAML to escape exactly two runtime-resolved
+binding paths (`Name`, `Label` in the lobby item template), both of which are
+already under behavioral test.
+
+### Point-by-point
+
+| Their claim | Adjudication | Basis |
+| --- | --- | --- |
+| Test pyramid: real-window tests must be a thin top layer | **Partially accepted as general prior; rejected as verdict here** — this repo's UI layer sits on an existing 84-test headless backbone with engine logic at ~95%+ headless coverage. The pyramid is intact; 38 view tests map one-to-one to spec'd behaviors | Section 6 |
+| 10–100× slower per test; dispatcher flake risk | **Empirically false at this scale**: full suite (122 tests incl. all UI) runs in ~6 s wall; zero flakes across every run in this working session; no focus theft since `HeadlessWindow` | measured, §8 |
+| `ShowDialog` hangs runners | True generally; **zero modals here** — the single dialog is seamed behind `ICrashReporter` | §5 criterion 2 |
+| B "tolerates logic-in-views" | **Inverted for this repo**: logic lives in Core (pure rules engine + services, ~95% covered headless); code-behind holds only view behavior | architecture audit |
+| Compiled bindings close A's blindness gap | **False on WPF** — MAUI/WinUI-only feature; third-party port would add a dependency to guard two already-tested paths | NuGet/MS docs check |
+| Harness-owned lifecycle (`ShowForTestAsync`, compiler-enforced suppression) | **Good idea, parked**: our structural equivalents exist today (opener probes suppress `Show`; `HeadlessWindow.Prepare` mandatory at construction). A call-level self-scan guard remains parked under T5 | §8 |
+| "Irony: B makes windows pop up on dev machines" | **Accepted hit** — one real leak was found by audit and fixed same-day via off-screen construction | §5 caveat 2 |
+| Settle with data over a month (escaped defects, wall-time, flake rate) | **Adopted.** Baseline recorded below; re-evaluate on the §7 triggers or the metrics | — |
+
+### Baseline metrics for the proposed re-evaluation
+
+- Suite wall-time: **~6 s total** (84 headless + 38 view tests)
+- Flake rate: **0** observed across all session runs
+- Escaped UI/harness incidents: **1** (the returned-to-lobby window flash),
+  found by audit, fixed same day via `HeadlessWindow.Prepare`
+
+### Position after rebuttal
+
+Unchanged in verdict, refined in commitments:
+
+1. Keep STA-driven windows as the view-behavior layer **on top of** the
+   headless backbone — not instead of it. The pyramid framing is accepted;
+   JSharp's error is assuming the base is missing here.
+2. Reject compiled-bindings adoption on WPF (feature does not exist; two
+   bound paths are already behavior-tested).
+3. Park the call-level enforcement guard under T5.
+4. Hold both repos to the three metrics above for a month before any further
+   strategy debate.
+
+## 11. Summary
 
 Both strategies are valid answers — to different questions. A answers "how do I
 test logic that a UI would otherwise block?"; B answers "how do I prove the view
