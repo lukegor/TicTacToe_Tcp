@@ -81,5 +81,5 @@ hermetic CI builds rather than headless execution.
 | `Directory.Packages.props` | Central Package Management for all NuGet versions. |
 | `Client-Server-App.slnx` | XML-based solution file. |
 | `src/Client-Server-App.Core/` | Portable engine: game rules, rooms, protocol, transports, diagnostics (net10.0). |
-| `src/Client-Server-App/` | WPF application shell referencing the core (net10.0-windows). |
+| `src/Client-Server-App/` | WPF application shell referencing the core (net10.0-windows). Windows follow MVVM — per-window ViewModels (CommunityToolkit.Mvvm) in `ViewModels/`, code-behind only wires DataContext/lifecycle. |
 | `tests/` | xunit.v3 (MTP) suite against the core. |
