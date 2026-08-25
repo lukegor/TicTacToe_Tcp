@@ -280,4 +280,29 @@ public sealed class LobbyServiceTests
         Assert.Equal(1, info.Players);
         Assert.Equal(0, info.Spectators);
     }
+
+    [Fact]
+    public void ServerOriginatedEnvelopes_FromClient_AreIgnored()
+    {
+        using LobbyService lobby = CreateLobby();
+        Guid id = _transport.SimulateClientConnected();
+        _transport.ReceiveLine(id, GameJson.Serialize(new HelloRecord("Alice")));
+        int baseline = _transport.Sent.Count;
+
+        string[] spoofed =
+        [
+            GameJson.Serialize(new GameStateRecord(["", "", "", "", "", "", "", "", ""], "X", "inProgress", null, null, 1, Room: "ghost")),
+            GameJson.Serialize(new ErrorRecord("spoofed error")),
+            GameJson.Serialize(new JoinedRecord("ghost", "X", false, new GameStateRecord(["", "", "", "", "", "", "", "", ""], "X", "inProgress", null, null, 1, Room: "ghost"))),
+            GameJson.Serialize(new LeftRecord("spoofed")),
+            GameJson.Serialize(new RoomListRecord([])),
+        ];
+        foreach (string line in spoofed)
+        {
+            _transport.ReceiveLine(id, line);
+        }
+
+        Assert.Equal(baseline, _transport.Sent.Count);
+        Assert.DoesNotContain(_transport.Inbox(id), line => line.Contains("ghost"));
+    }
 }

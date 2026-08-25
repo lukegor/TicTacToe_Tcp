@@ -394,4 +394,52 @@ public sealed class RoomTests
 
         Assert.True(changes >= 3);
     }
+
+    [Fact]
+    public void Seat_And_Spectator_AfterRoomClosed_AreInert()
+    {
+        using Room room = CreateRoom(TimeSpan.FromSeconds(10));
+        Guid loneHost = Guid.NewGuid();
+        Guid lateJoiner = Guid.NewGuid();
+        Guid lateSpectator = Guid.NewGuid();
+
+        room.Seat(loneHost, "Alice");
+        int envelopesBefore = _inbox.Values.Sum(list => list.Count);
+
+        room.HandleDisconnect(loneHost); // lone host drop closes the room synchronously
+
+        room.Seat(lateJoiner, "Carol");
+        room.AddSpectator(lateSpectator);
+
+        Assert.Equal(0, room.PlayerCount);
+        Assert.Equal(envelopesBefore, _inbox.Values.Sum(list => list.Count));
+        Assert.DoesNotContain(_logs, l => l.Contains("Carol"));
+    }
+
+    [Fact]
+    public void RematchOffer_FromNonSeat_IsIgnored()
+    {
+        using Room room = CreateRoom(TimeSpan.FromSeconds(10));
+        Guid x = Guid.NewGuid();
+        Guid o = Guid.NewGuid();
+        Guid spectator = Guid.NewGuid();
+
+        room.Seat(x, "Alice");
+        room.Seat(o, "Bob");
+        room.AddSpectator(spectator);
+
+        room.HandleMove(x, 0);
+        room.HandleMove(o, 3);
+        room.HandleMove(x, 1);
+        room.HandleMove(o, 4);
+        room.HandleMove(x, 2); // X wins [0,1,2]
+
+        room.HandleRematchOffer(spectator);
+
+        GameStateRecord state = LastState(x);
+        Assert.Null(state.RematchOfferedBy);
+
+        room.HandleRematchOffer(x);
+        Assert.Equal("X", LastState(x).RematchOfferedBy);
+    }
 }

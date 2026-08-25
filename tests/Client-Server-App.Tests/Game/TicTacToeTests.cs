@@ -121,4 +121,21 @@ public sealed class TicTacToeTests
             Assert.True(_game.TryApplyMove(cell, player));
         }
     }
+
+    [Fact]
+    public void DeclareForfeit_AfterGameFinished_IsNoOp()
+    {
+        TicTacToe engine = new();
+        Assert.True(engine.TryApplyMove(0, Player.X));
+        Assert.True(engine.TryApplyMove(3, Player.O));
+        Assert.True(engine.TryApplyMove(1, Player.X));
+        Assert.True(engine.TryApplyMove(4, Player.O));
+        Assert.True(engine.TryApplyMove(2, Player.X)); // X wins [0,1,2]
+
+        engine.DeclareForfeit(Player.O);
+
+        Assert.Equal(GameStatus.Won, engine.Status);
+        Assert.Equal(Player.X, engine.Winner);
+        Assert.Equal([0, 1, 2], engine.WinningLine!);
+    }
 }
