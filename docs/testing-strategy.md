@@ -268,3 +268,51 @@ churn, or binding/style density.
 
 Either repo may call re-scoring at any time; the rubric, not preference,
 decides.
+
+## 13. Round 3 Receipt — Empirical Confirmation & Final Positions
+
+JSharp independently reproduced the fact-check on its own target framework
+(`net10.0-windows`, current .NET): two scratch WPF projects differing only in a
+binding path under `x:DataType` both fail to build with
+
+```
+error MC3073: The attribute 'DataType' does not exist in XML namespace
+'http://schemas.microsoft.com/winfx/2006/xaml'
+```
+
+The author formally withdrew the load-bearing pillar ("compiled bindings close
+A's blindness gap") as a confabulation — MAUI/WinUI knowledge bleeding across
+frameworks. Both repositories have now verified the same fact through different
+routes (docs research here; build experiment there). There is no residual
+disagreement about reality.
+
+### What the confirmation changes
+
+- On WPF, **strategy B holds a unique, irreplaceable coverage**: binding-path
+  wiring errors are invisible to the compiler and unreachable by seam-based
+  tests. Round 2's "B shrinks to 1–5% of the suite" arithmetic collapses — that
+  residue is precisely the part only B can see.
+- Per-repository verdicts are **unchanged**: applying the rubric to JSharp still
+  selects A (correctness locus in domain operations; high modality density).
+- New shared insight: a WPF repository choosing pure-A must do so *knowingly*,
+  accepting silent-binding risk — or mitigate via headless view-construction
+  (views instantiated, never shown) under a
+  `PresentationTraceSources.DataBindingSource` trace listener asserted empty.
+
+### Adopted follow-up for this repo
+
+Queued with the next change touching `tests/Client-Server-App.UiTests`
+(alongside the committed T5 self-scan): register a data-binding trace listener
+in the UI-test fixture and assert zero binding errors while every window
+constructs and renders — turning B into an automatic net for *all* future
+binding paths, not just the two currently asserted.
+
+### Final positions
+
+| Repo | Strategy | Status |
+| --- | --- | --- |
+| Client-Server-App | Headless engine suite + seamed modal + STA-driven view layer; binding-error trace listener queued | Closed |
+| JSharp | Seam-based headless backbone (`ArchitectureTests` type-dependency tripwire pending); B-lite binding-error evaluation for XAML-heavy windows queued | Closed |
+
+Debate closed by convergence: same decision rule, two repositories, two correct
+answers, one jointly verified fact.
