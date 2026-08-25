@@ -3,9 +3,9 @@ using System.Net.Sockets;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Client_Server_App.Game;
+using ClientServer.Core.Game;
 
-namespace Client_Server_App;
+namespace ClientServer.App;
 
 /// <summary>
 /// Tic-tac-toe board driven by a <see cref="PlayerSession"/>. Works for players

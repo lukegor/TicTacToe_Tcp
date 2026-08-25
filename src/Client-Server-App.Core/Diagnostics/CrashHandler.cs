@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace Client_Server_App.Diagnostics;
+namespace ClientServer.Core.Diagnostics;
 
 /// <summary>Performs crash-dialog follow-ups (copy details, open folder).</summary>
 internal interface ICrashReporter

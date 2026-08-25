@@ -3,11 +3,11 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using Client_Server_App.Game;
+using ClientServer.Core.Game;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace Client_Server_App;
+namespace ClientServer.Core.Transports;
 
 /// <summary>
 /// Asynchronous TCP server that tags every accepted connection with a GUID and

@@ -3,10 +3,11 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Windows;
-using Client_Server_App.Game;
+using ClientServer.Core.Game;
+using ClientServer.Core.Transports;
 using Microsoft.Extensions.Logging;
 
-namespace Client_Server_App;
+namespace ClientServer.App;
 
 /// <summary>
 /// Interaction logic for ConnectionWindow.xaml

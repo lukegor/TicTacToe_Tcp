@@ -1,8 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
-using Client_Server_App.Game;
+using ClientServer.Core.Game;
 
-namespace Client_Server_App;
+namespace ClientServer.App;
 
 /// <summary>Room browser: lists rooms pushed by the referee, creates or joins one.</summary>
 public partial class LobbyWindow : Window

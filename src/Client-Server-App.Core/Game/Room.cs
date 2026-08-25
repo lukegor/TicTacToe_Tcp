@@ -1,4 +1,4 @@
-namespace Client_Server_App.Game;
+namespace ClientServer.Core.Game;
 
 /// <summary>
 /// One named tic-tac-toe room: two player seats, spectators, authoritative game

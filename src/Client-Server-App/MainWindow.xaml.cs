@@ -1,6 +1,6 @@
-﻿using System.Windows;
+using System.Windows;
 
-namespace Client_Server_App;
+namespace ClientServer.App;
 
 /// <summary>
 /// Interaction logic for MainWindow.xaml

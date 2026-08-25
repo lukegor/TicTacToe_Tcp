@@ -1,8 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
-using Client_Server_App.Game;
+using ClientServer.Core.Game;
 
-namespace Client_Server_App;
+namespace ClientServer.App;
 
 /// <summary>Read-only referee view: live room table plus an event log.</summary>
 public partial class ServerWindow : Window

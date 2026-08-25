@@ -1,4 +1,4 @@
-namespace Client_Server_App.Game;
+namespace ClientServer.Core.Game;
 
 internal enum Player
 {

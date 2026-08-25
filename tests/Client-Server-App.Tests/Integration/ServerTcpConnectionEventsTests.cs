@@ -1,7 +1,7 @@
-using Client_Server_App;
+using ClientServer.Core.Transports;
 using Xunit;
 
-namespace Client_Server_App.Tests.Integration;
+namespace ClientServer.Tests.Integration;
 
 public sealed class ServerTcpConnectionEventsTests
 {

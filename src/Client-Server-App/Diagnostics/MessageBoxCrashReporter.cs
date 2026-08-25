@@ -1,7 +1,9 @@
 using System.IO;
 using System.Windows;
 
-namespace Client_Server_App.Diagnostics;
+using ClientServer.Core.Diagnostics;
+
+namespace ClientServer.App.Diagnostics;
 
 /// <summary>Yes copies details to the clipboard, No opens the log folder,
 /// Cancel just closes. The application shuts down afterwards either way.</summary>

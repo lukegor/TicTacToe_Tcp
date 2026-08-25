@@ -1,8 +1,9 @@
-﻿using System.Windows;
-using Client_Server_App.Diagnostics;
+using System.Windows;
+using ClientServer.Core.Diagnostics;
+using ClientServer.App.Diagnostics;
 using Microsoft.Extensions.Logging;
 
-namespace Client_Server_App;
+namespace ClientServer.App;
 
 public partial class App : Application
 {

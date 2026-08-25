@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>Client_Server_App</RootNamespace>
+    <RootNamespace>ClientServer.Core</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

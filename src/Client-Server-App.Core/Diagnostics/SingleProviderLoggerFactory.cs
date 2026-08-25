@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace Client_Server_App.Diagnostics;
+namespace ClientServer.Core.Diagnostics;
 
 /// <summary>An <see cref="ILoggerFactory"/> over exactly one provider; adding
 /// more is deliberately unsupported.</summary>

@@ -1,9 +1,9 @@
-using Client_Server_App.Game;
-using Client_Server_App.Tests.TestDoubles;
+using ClientServer.Core.Game;
+using ClientServer.Tests.TestDoubles;
 using Microsoft.Extensions.Logging;
 using Xunit;
 
-namespace Client_Server_App.Tests.Diagnostics;
+namespace ClientServer.Tests.Diagnostics;
 
 public sealed class ServiceLoggingTests
 {

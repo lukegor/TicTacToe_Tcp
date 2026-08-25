@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace Client_Server_App.Tests.TestDoubles;
+namespace ClientServer.Tests.TestDoubles;
 
 public sealed class CapturingLogger : ILogger
 {

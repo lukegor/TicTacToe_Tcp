@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Client_Server_App.Game;
+namespace ClientServer.Core.Game;
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
 [JsonDerivedType(typeof(MoveRequestRecord), "moveRequest")]

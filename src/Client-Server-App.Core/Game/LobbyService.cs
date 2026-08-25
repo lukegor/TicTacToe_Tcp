@@ -1,9 +1,10 @@
 using System.IO;
 using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
+using ClientServer.Core.Transports;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace Client_Server_App.Game;
+namespace ClientServer.Core.Game;
 
 /// <summary>
 /// Server-side referee: owns the room table, routes client envelopes, validates

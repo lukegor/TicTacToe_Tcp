@@ -1,7 +1,7 @@
-using Client_Server_App.Game;
+using ClientServer.Core.Game;
 using Xunit;
 
-namespace Client_Server_App.Tests.Game;
+namespace ClientServer.Tests.Game;
 
 public sealed class GameJsonTests
 {

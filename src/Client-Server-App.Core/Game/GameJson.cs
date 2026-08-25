@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Client_Server_App.Game;
+namespace ClientServer.Core.Game;
 
 internal static class GameJson
 {

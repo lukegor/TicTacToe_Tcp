@@ -1,10 +1,11 @@
 using System.Diagnostics;
 using System.IO;
-using Client_Server_App.Game;
-using Client_Server_App.Tests.TestDoubles;
+using ClientServer.Core.Game;
+using ClientServer.Core.Transports;
+using ClientServer.Tests.TestDoubles;
 using Xunit;
 
-namespace Client_Server_App.Tests.Game;
+namespace ClientServer.Tests.Game;
 
 public sealed class PlayerSessionTests
 {

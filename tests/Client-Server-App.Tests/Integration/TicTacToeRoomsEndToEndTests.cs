@@ -1,9 +1,9 @@
 using System.IO;
-using Client_Server_App;
-using Client_Server_App.Game;
+using ClientServer.Core.Transports;
+using ClientServer.Core.Game;
 using Xunit;
 
-namespace Client_Server_App.Tests.Integration;
+namespace ClientServer.Tests.Integration;
 
 public sealed class TicTacToeRoomsEndToEndTests
 {

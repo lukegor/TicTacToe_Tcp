@@ -2,7 +2,7 @@ using System.IO;
 using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
 
-namespace Client_Server_App.Diagnostics;
+namespace ClientServer.Core.Diagnostics;
 
 /// <summary>Writes formatted log lines to one file per process session through a
 /// single background writer; prunes old session files at startup.</summary>

@@ -1,9 +1,9 @@
 using System.IO;
-using Client_Server_App.Diagnostics;
+using ClientServer.Core.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Xunit;
 
-namespace Client_Server_App.Tests.Diagnostics;
+namespace ClientServer.Tests.Diagnostics;
 
 public sealed class FileLoggerProviderTests : IDisposable
 {

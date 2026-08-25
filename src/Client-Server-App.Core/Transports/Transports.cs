@@ -1,4 +1,4 @@
-namespace Client_Server_App.Game;
+namespace ClientServer.Core.Transports;
 
 /// <summary>The referee-side view of the server transport: identity-aware pipes.</summary>
 internal interface IServerTransport

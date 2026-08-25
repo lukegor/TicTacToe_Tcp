@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
-    <RootNamespace>Client_Server_App.Tests</RootNamespace>
+    <RootNamespace>ClientServer.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

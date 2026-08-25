@@ -1,11 +1,11 @@
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
-using Client_Server_App.Game;
+using ClientServer.Core.Game;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace Client_Server_App;
+namespace ClientServer.Core.Transports;
 
 /// <summary>
 /// Asynchronous TCP client that exchanges newline-delimited UTF-8 messages with a server.
