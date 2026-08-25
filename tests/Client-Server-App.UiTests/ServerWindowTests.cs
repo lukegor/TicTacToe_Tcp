@@ -32,7 +32,7 @@ public sealed class ServerWindowTests : IDisposable
         Hello(_transport, b, "Bob");
         _transport.ReceiveLine(b, GameJson.Serialize(new JoinRoomRecord("duel")));
 
-        ServerWindow window = new(_lobby, 1234);
+        ServerWindow window = HeadlessWindow.Prepare(new ServerWindow(_lobby, 1234));
         await TestDispatcher.FlushAsync();
 
         Assert.Single(window.RoomsPanel.Children);
@@ -44,7 +44,7 @@ public sealed class ServerWindowTests : IDisposable
     [WpfFact]
     public async Task MembershipChange_RerendersRows()
     {
-        ServerWindow window = new(_lobby, 1234);
+        ServerWindow window = HeadlessWindow.Prepare(new ServerWindow(_lobby, 1234));
         Assert.Empty(window.RoomsPanel.Children);
 
         Guid a = _transport.SimulateClientConnected();
@@ -61,7 +61,7 @@ public sealed class ServerWindowTests : IDisposable
     [WpfFact]
     public async Task LogEvent_FromWorkerThread_AppendsToOutputBox()
     {
-        ServerWindow window = new(_lobby, 1234);
+        ServerWindow window = HeadlessWindow.Prepare(new ServerWindow(_lobby, 1234));
         Guid a = _transport.SimulateClientConnected();
         Hello(_transport, a, "Alice"); // raises LogReceived off-thread
         await TestDispatcher.FlushAsync();
@@ -73,7 +73,7 @@ public sealed class ServerWindowTests : IDisposable
     [WpfFact]
     public async Task EmptyLobby_RendersZeroRows_NoCrash()
     {
-        ServerWindow window = new(_lobby, 1234);
+        ServerWindow window = HeadlessWindow.Prepare(new ServerWindow(_lobby, 1234));
         await TestDispatcher.FlushAsync();
 
         Assert.Empty(window.RoomsPanel.Children);

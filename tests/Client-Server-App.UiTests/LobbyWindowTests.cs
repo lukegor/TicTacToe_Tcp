@@ -22,7 +22,7 @@ public sealed class LobbyWindowTests : IDisposable
     [WpfFact]
     public async Task Construction_And_RoomListPush_RendersRooms()
     {
-        LobbyWindow window = new(_session);
+        LobbyWindow window = HeadlessWindow.Prepare(new LobbyWindow(_session));
 
         _transport.ReceiveLine(GameJson.Serialize(new RoomListRecord(
             [new RoomInfoRecord("duel", 1, 0), new RoomInfoRecord("friday", 2, 3)])));
@@ -36,7 +36,7 @@ public sealed class LobbyWindowTests : IDisposable
     [WpfFact]
     public async Task CreateButton_ValidName_SendsEnvelope_ClearsInput()
     {
-        LobbyWindow window = new(_session);
+        LobbyWindow window = HeadlessWindow.Prepare(new LobbyWindow(_session));
         window.RoomNameBox.Text = "  friday  ";
 
         UiAssert.Press(window.CreateButton);
@@ -49,7 +49,7 @@ public sealed class LobbyWindowTests : IDisposable
     [WpfFact]
     public async Task CreateButton_EmptyName_ShowsNotice_SendsNothing()
     {
-        LobbyWindow window = new(_session);
+        LobbyWindow window = HeadlessWindow.Prepare(new LobbyWindow(_session));
         window.RoomNameBox.Text = "   ";
         int sentBefore = _transport.SentLines.Count;
 
@@ -63,7 +63,7 @@ public sealed class LobbyWindowTests : IDisposable
     [WpfFact]
     public async Task JoinRow_PressGeneratedJoinButton_SendsJoinRoom()
     {
-        LobbyWindow window = new(_session);
+        LobbyWindow window = HeadlessWindow.Prepare(new LobbyWindow(_session));
         _transport.ReceiveLine(GameJson.Serialize(new RoomListRecord([new RoomInfoRecord("duel", 1, 0)])));
         await TestDispatcher.FlushAsync();
         RealizeRoomsList(window);
@@ -82,7 +82,7 @@ public sealed class LobbyWindowTests : IDisposable
     [WpfFact]
     public async Task JoinRow_DisconnectedSession_SurfaceOperationError()
     {
-        LobbyWindow window = new(_session);
+        LobbyWindow window = HeadlessWindow.Prepare(new LobbyWindow(_session));
         _transport.ReceiveLine(GameJson.Serialize(new RoomListRecord([new RoomInfoRecord("duel", 1, 0)])));
         await TestDispatcher.FlushAsync();
         RealizeRoomsList(window);
@@ -100,7 +100,7 @@ public sealed class LobbyWindowTests : IDisposable
     [WpfFact]
     public async Task ErrorEnvelope_AppendsNotice_And_ReturnedToLobby_RecoversList()
     {
-        LobbyWindow window = new(_session);
+        LobbyWindow window = HeadlessWindow.Prepare(new LobbyWindow(_session));
 
         _transport.ReceiveLine(GameJson.Serialize(new ErrorRecord("Room 'x' does not exist.")));
         await TestDispatcher.FlushAsync();

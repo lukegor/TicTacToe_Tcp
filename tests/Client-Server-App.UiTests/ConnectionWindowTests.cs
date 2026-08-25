@@ -35,7 +35,8 @@ public sealed class ConnectionWindowTests
 
     private static ConnectionWindow NewWindow(
         Func<LobbyWindow, bool>? lobbyProbe = null,
-        Func<ServerWindow, bool>? refereeProbe = null) => new(lobbyProbe, refereeProbe);
+        Func<ServerWindow, bool>? refereeProbe = null) =>
+        HeadlessWindow.Prepare(new ConnectionWindow(lobbyProbe, refereeProbe));
 
     private static void Press(Button button) =>
         ((System.Windows.Automation.Provider.IInvokeProvider)new ButtonAutomationPeer(button)).Invoke();

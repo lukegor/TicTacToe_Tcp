@@ -16,7 +16,7 @@ public sealed class GameWindowTests : IDisposable
     public GameWindowTests()
     {
         (_session, _transport) = UiTestSession.ConnectSeatedAsync(mark: "X").GetAwaiter().GetResult();
-        _window = new GameWindow(_session);
+        _window = HeadlessWindow.Prepare(new GameWindow(_session));
     }
 
     public void Dispose() => _session.Dispose();
@@ -75,7 +75,7 @@ public sealed class GameWindowTests : IDisposable
         var (session, transport) = UiTestSession.ConnectSeatedAsync(mark: null).GetAwaiter().GetResult();
         try
         {
-            GameWindow window = new(session);
+            GameWindow window = HeadlessWindow.Prepare(new GameWindow(session));
             await TestDispatcher.FlushAsync();
 
             Assert.True(session.IsSpectator);
