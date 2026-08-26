@@ -9,37 +9,69 @@
     <Window.Resources>
         <ResourceDictionary Source="Themes/Shared.xaml" />
     </Window.Resources>
-    <Grid Margin="12">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="110" />
         </Grid.RowDefinitions>
 
-        <!-- Live room table -->
-        <ItemsControl x:Name="RoomsPanel" ItemsSource="{Binding Rooms}">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Grid Margin="0,2,0,2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="90" />
-                            <ColumnDefinition Width="100" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="1" Text="{Binding Players, StringFormat={}{0}/2}"
-                                   VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" Text="{Binding Spectators}"
-                                   VerticalAlignment="Center" />
-                    </Grid>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <TextBlock Text="Live rooms"
+                   Style="{StaticResource PageTitle}"
+                   Margin="0,0,0,12" />
+
+        <!-- Column headers (kept outside RoomsPanel: tests index item grids) -->
+        <Grid Grid.Row="1" Margin="0,0,0,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="90" />
+                <ColumnDefinition Width="100" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Room" Style="{StaticResource PageSubtitle}" />
+            <TextBlock Grid.Column="1" Text="Players" Style="{StaticResource PageSubtitle}" />
+            <TextBlock Grid.Column="2" Text="Spectators" Style="{StaticResource PageSubtitle}" />
+        </Grid>
+
+        <Grid Grid.Row="2">
+            <ItemsControl x:Name="RoomsPanel" ItemsSource="{Binding Rooms}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="90" />
+                                <ColumnDefinition Width="100" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="{Binding Players, StringFormat={}{0}/2}"
+                                       VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Text="{Binding Spectators}"
+                                       VerticalAlignment="Center" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Text="No active rooms yet."
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Visibility="Collapsed">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock" BasedOn="{StaticResource PageSubtitle}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Items.Count, ElementName=RoomsPanel}" Value="0">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </Grid>
 
         <!-- Event log -->
         <TextBox x:Name="OutputTextBox"
-                 Grid.Row="1"
+                 Grid.Row="3"
                  Style="{StaticResource LogOutput}"
-                 Margin="0,8,0,0"
+                 Margin="0,12,0,0"
                  Text="{Binding LogText, Mode=OneWay}" />
     </Grid>
 </Window>

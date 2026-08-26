@@ -4,65 +4,75 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Connection" Height="480" Width="560"
+        Title="Connection" Height="540" Width="600"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <ResourceDictionary Source="Themes/Shared.xaml" />
     </Window.Resources>
-    <Grid Margin="12">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Connect / Host panels -->
-        <Grid>
+        <TextBlock Text="Connect to a game"
+                   Style="{StaticResource PageTitle}"
+                   Margin="0,0,0,16" />
+
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <!-- Connect Section -->
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top">
-                <TextBlock Text="Connect" FontWeight="Bold" Margin="0,0,0,10" />
-                <TextBlock Text="IP Address:" Style="{StaticResource FieldLabel}" />
-                <TextBox x:Name="AddressTextBox"
-                         Style="{StaticResource FormField}"
-                         Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}" />
-                <TextBlock Text="Port:" Style="{StaticResource FieldLabel}" />
-                <TextBox x:Name="PortTextBox"
-                         Style="{StaticResource FormField}"
-                         Text="{Binding Port, UpdateSourceTrigger=PropertyChanged}" />
-                <TextBlock Text="Your name (optional):" Style="{StaticResource FieldLabel}" />
-                <TextBox x:Name="NameTextBox"
-                         Style="{StaticResource FormField}"
-                         MaxLength="30"
-                         Text="{Binding PlayerName, UpdateSourceTrigger=PropertyChanged}" />
-                <Button x:Name="ConnectButton"
-                        Content="Connect"
-                        Style="{StaticResource ActionButton}"
-                        Command="{Binding ConnectCommand}" />
-            </StackPanel>
+            <!-- Join card -->
+            <Border Style="{StaticResource SectionCard}" Margin="0,0,6,0">
+                <StackPanel>
+                    <TextBlock Text="Join a game" Style="{StaticResource SectionHeader}" />
+                    <TextBlock Text="IP Address:" Style="{StaticResource FieldLabel}" />
+                    <TextBox x:Name="AddressTextBox"
+                             Style="{StaticResource FormField}"
+                             Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock Text="Port:" Style="{StaticResource FieldLabel}" />
+                    <TextBox x:Name="PortTextBox"
+                             Style="{StaticResource FormField}"
+                             Text="{Binding Port, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock Text="Your name (optional):" Style="{StaticResource FieldLabel}" />
+                    <TextBox x:Name="NameTextBox"
+                             Style="{StaticResource FormField}"
+                             MaxLength="30"
+                             Text="{Binding PlayerName, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button x:Name="ConnectButton"
+                            Content="Connect"
+                            Style="{StaticResource PrimaryButton}"
+                            Height="34"
+                            Command="{Binding ConnectCommand}" />
+                </StackPanel>
+            </Border>
 
-            <!-- Host Section -->
-            <StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Top">
-                <TextBlock Text="Host" FontWeight="Bold" Margin="0,0,0,10" />
-                <TextBlock Text="Port:" Style="{StaticResource FieldLabel}" />
-                <TextBox x:Name="HostPortTextBox"
-                         Style="{StaticResource FormField}"
-                         Text="{Binding HostPort, UpdateSourceTrigger=PropertyChanged}" />
-                <Button x:Name="HostButton"
-                        Content="Create Host"
-                        Style="{StaticResource ActionButton}"
-                        Command="{Binding HostCommand}" />
-            </StackPanel>
+            <!-- Host card -->
+            <Border Grid.Column="1" Style="{StaticResource SectionCard}" Margin="6,0,0,0">
+                <StackPanel>
+                    <TextBlock Text="Host a new game" Style="{StaticResource SectionHeader}" />
+                    <TextBlock Text="Port:" Style="{StaticResource FieldLabel}" />
+                    <TextBox x:Name="HostPortTextBox"
+                             Style="{StaticResource FormField}"
+                             Text="{Binding HostPort, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button x:Name="HostButton"
+                            Content="Create Host"
+                            Style="{StaticResource PrimaryButton}"
+                            Height="34"
+                            Command="{Binding HostCommand}" />
+                </StackPanel>
+            </Border>
         </Grid>
 
         <!-- Message log -->
         <TextBox x:Name="OutputTextBox"
-                 Grid.Row="1"
+                 Grid.Row="2"
                  Style="{StaticResource LogOutput}"
-                 Margin="0,12,0,0"
+                 Margin="0,16,0,0"
                  IsReadOnlyCaretVisible="False"
                  VerticalContentAlignment="Top"
                  Text="{Binding LogText, Mode=OneWay}" />

@@ -5,12 +5,25 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ClientServer.App"
         mc:Ignorable="d"
-        Title="Client-Server App" Height="450" Width="800"
+        Title="Client-Server App" Height="360" Width="560"
         WindowStartupLocation="CenterScreen">
-    <Grid>
-        <Button Content="Open Connection" Width="140" Height="30"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                Click="OpenConnectionButton_Click" />
+    <Window.Resources>
+        <ResourceDictionary Source="Themes/Shared.xaml" />
+    </Window.Resources>
+    <Grid Margin="24">
+        <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="Tic-Tac-Toe"
+                       FontSize="28" FontWeight="SemiBold"
+                       HorizontalAlignment="Center" />
+            <TextBlock Text="Local multiplayer client &amp; referee console"
+                       Style="{StaticResource PageSubtitle}"
+                       HorizontalAlignment="Center" Margin="0,4,0,24" />
+            <Button Content="Open Connection"
+                    Style="{StaticResource PrimaryButton}"
+                    Width="180" Height="36"
+                    HorizontalAlignment="Center"
+                    Click="OpenConnectionButton_Click" />
+        </StackPanel>
         <ComboBox x:Name="ThemeSelector"
                   HorizontalAlignment="Right" VerticalAlignment="Top"
                   Margin="0,12,12,0" Width="110"
