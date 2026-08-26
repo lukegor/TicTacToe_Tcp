@@ -17,14 +17,19 @@
         </Grid.RowDefinitions>
 
         <Border Style="{StaticResource SectionCard}" Margin="0,0,0,12">
-            <StackPanel Orientation="Horizontal">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
                 <TextBlock Text="Room name:" VerticalAlignment="Center" Margin="0,0,8,0" />
-                <TextBox x:Name="RoomNameBox" Width="220" VerticalAlignment="Center"
+                <TextBox x:Name="RoomNameBox" Grid.Column="1" VerticalAlignment="Center"
                          Text="{Binding RoomNameInput, UpdateSourceTrigger=PropertyChanged}" />
-                <Button x:Name="CreateButton" Content="Create room"
-                        Style="{StaticResource PrimaryButton}" Height="34" Width="110" Margin="10,0,0,0"
+                <Button x:Name="CreateButton" Grid.Column="2" Content="Create room"
+                        Style="{StaticResource PrimaryButton}" Height="34" Margin="10,0,0,0"
                         Command="{Binding CreateRoomCommand}" />
-            </StackPanel>
+            </Grid>
         </Border>
 
         <Grid Grid.Row="1">
@@ -42,7 +47,7 @@
                                     Command="{Binding DataContext.JoinRoomCommand,
                                               RelativeSource={RelativeSource AncestorType=Window}}"
                                     CommandParameter="{Binding}" />
-                            <StackPanel Orientation="Horizontal">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,10,0" />
                                 <TextBlock Text="{Binding Label}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                             </StackPanel>

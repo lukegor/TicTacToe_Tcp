@@ -206,6 +206,17 @@ default (on) unless a human objects.
 - `ThemeMode` values are only the four statics (`Light/Dark/System/None`);
   it's a struct, not an enum — no parsing from config strings for free.
 
+### P9 — [hit] Fluent buttons are Left-aligned by design
+Symptom: after adopting Fluent, buttons that used to fill their container
+become content-sized (board tiles shrink to glyph size, fixed-width buttons
+clip their labels, "full-width" CTAs quietly stop filling).
+Root cause: the Fluent Button style sets `HorizontalAlignment="Left"` as a
+style setter — Fluent buttons size to content unless told otherwise.
+Rule: any button that must stretch declares
+`HorizontalAlignment="Stretch"` locally (attribute beats style setter), and
+button widths must fit content at the actual font weight (SemiBold is wider
+than Regular — "Create room" clipped at Width=110).
+
 ## 6. Verification gates (run all after any theming change)
 
 1. **Build:** 0 warnings with only `WPF0001` suppressed.

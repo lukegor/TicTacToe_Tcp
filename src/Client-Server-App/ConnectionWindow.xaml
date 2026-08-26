@@ -46,7 +46,7 @@
                     <Button x:Name="ConnectButton"
                             Content="Connect"
                             Style="{StaticResource PrimaryButton}"
-                            Height="34"
+                            Height="34" HorizontalAlignment="Stretch"
                             Command="{Binding ConnectCommand}" />
                 </StackPanel>
             </Border>
@@ -62,7 +62,7 @@
                     <Button x:Name="HostButton"
                             Content="Create Host"
                             Style="{StaticResource PrimaryButton}"
-                            Height="34"
+                            Height="34" HorizontalAlignment="Stretch"
                             Command="{Binding HostCommand}" />
                 </StackPanel>
             </Border>

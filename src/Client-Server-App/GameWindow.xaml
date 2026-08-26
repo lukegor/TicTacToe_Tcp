@@ -33,6 +33,7 @@
                     <DataTemplate>
                         <Grid Margin="2">
                             <Button FontSize="42" FontWeight="SemiBold"
+                                    HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="96"
                                     Content="{Binding Mark}"
                                     IsEnabled="{Binding IsEnabled}"
                                     Command="{Binding DataContext.MoveCommand,
