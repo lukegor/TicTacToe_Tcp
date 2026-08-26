@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 
 namespace ClientServer.App;
 
@@ -16,5 +17,20 @@ public partial class MainWindow : Window
     {
         ConnectionWindow connectionWindow = new();
         connectionWindow.Show();
+    }
+
+    private void ThemeSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (Application.Current is not { } app)
+        {
+            return;
+        }
+
+        app.ThemeMode = ThemeSelector.SelectedIndex switch
+        {
+            1 => ThemeMode.Light,
+            2 => ThemeMode.Dark,
+            _ => ThemeMode.System,
+        };
     }
 }
