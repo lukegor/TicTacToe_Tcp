@@ -1,3 +1,4 @@
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using ClientServer.App;
@@ -137,18 +138,41 @@ public sealed class GameWindowTests : IDisposable
     }
 
     [WpfFact]
-    public async Task WinningLine_HighlightsCells_WhiteElsewhere_AnnouncesWin()
+    public async Task WinningLine_HighlightsWinningCells_KeepsOthersClear_AnnouncesWin()
     {
+        // The test host has no Application, so Fluent tokens are unavailable
+        // until the theme dictionary is merged into the window explicitly.
+        _window.Resources.MergedDictionaries.Add(new ResourceDictionary
+        {
+            Source = new Uri("pack://application:,,,/PresentationFramework.Fluent;component/Themes/Fluent.Light.xaml")
+        });
+
         string[] won = ["X", "X", "X", "", "O", "", "", "", ""];
         _transport.ReceiveLine(GameJson.Serialize(new GameStateRecord(
             won, "O", "won", "X", [0, 1, 2], 1, Room: "duel", XName: "Alice", OName: "Bob")));
         await TestDispatcher.FlushAsync();
 
-        Assert.Equal(Brushes.LightGoldenrodYellow, Cell(0).Background);
-        Assert.Equal(Brushes.LightGoldenrodYellow, Cell(2).Background);
-        Assert.Equal(Brushes.White, Cell(8).Background);
+        IReadOnlyList<System.Windows.Controls.Border> overlays =
+            Cells.Select(OverlayOf)
+                .Select(o => o ?? throw new InvalidOperationException("Cell overlay missing"))
+                .ToList();
+        Assert.Equal(9, overlays.Count);
         Assert.Contains("You win!", _window.StatusText.Text);
+
+        foreach (int i in Enumerable.Range(0, 9))
+        {
+            Assert.Equal(i <= 2 ? Visibility.Visible : Visibility.Collapsed,
+                overlays[i].Visibility);
+        }
+
+        Assert.Equal((Brush)overlays[0].FindResource("SystemFillColorCautionBackgroundBrush"),
+            overlays[0].Background);
     }
+
+    private System.Windows.Controls.Border? OverlayOf(Button cell) =>
+        cell.Parent is Grid grid
+            ? grid.Children.OfType<System.Windows.Controls.Border>().FirstOrDefault()
+            : null;
 
     [WpfFact]
     public async Task Draw_StatusShown_ClicksSendNothing()

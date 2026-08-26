@@ -35,7 +35,7 @@
                                 CommandParameter="{Binding}" />
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,10,0" />
-                            <TextBlock Text="{Binding Label}" Foreground="Gray" />
+                            <TextBlock Text="{Binding Label}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                         </StackPanel>
                     </DockPanel>
                 </DataTemplate>

@@ -29,23 +29,18 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Button FontSize="32" FontWeight="Bold" Margin="2"
-                            Content="{Binding Mark}"
-                            IsEnabled="{Binding IsEnabled}"
-                            Command="{Binding DataContext.MoveCommand,
-                                      RelativeSource={RelativeSource AncestorType=Window}}"
-                            CommandParameter="{Binding CellIndex}">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Setter Property="Background" Value="White" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsHighlighted}" Value="True">
-                                        <Setter Property="Background" Value="LightGoldenrodYellow" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
+                    <Grid Margin="2">
+                        <Button FontSize="32" FontWeight="Bold"
+                                Content="{Binding Mark}"
+                                IsEnabled="{Binding IsEnabled}"
+                                Command="{Binding DataContext.MoveCommand,
+                                          RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding CellIndex}" />
+                        <Border Background="{DynamicResource SystemFillColorCautionBackgroundBrush}"
+                                IsHitTestVisible="False"
+                                Visibility="{Binding IsHighlighted,
+                                             Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    </Grid>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
