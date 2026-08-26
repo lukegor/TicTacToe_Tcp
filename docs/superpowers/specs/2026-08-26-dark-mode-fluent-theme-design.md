@@ -52,8 +52,11 @@ tokens so live switching re-colors them:
 | Location | Today | Becomes |
 |---|---|---|
 | LobbyWindow room label | `Foreground="Gray"` | `TextFillColorSecondaryBrush` |
-| Game cell normal background | `Background="White"` | `LayerFillColorDefaultBrush` |
-| Game cell win highlight | `LightGoldenrodYellow` | Fluent attention/accent token (exact key pinned during implementation against `Fluent.Dark.xaml`) |
+| Game cell normal background | `Background="White"` | Fluent default button background (custom cell style removed — a custom style would fall back to Aero2 templates inside a Fluent window) |
+| Game cell win highlight | `LightGoldenrodYellow` style trigger | Overlay `Border` with `SystemFillColorCautionBackgroundBrush`, visibility bound to `IsHighlighted` |
+
+(Exact token keys pinned against the Fluent theme sources in dotnet/wpf;
+present in Light.xaml, Dark.xaml, and HC.xaml.)
 
 `Themes/Shared.xaml` keeps its current keyed styles; no mode-specific
 dictionaries of our own.
