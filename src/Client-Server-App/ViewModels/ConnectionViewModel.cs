@@ -11,14 +11,11 @@ namespace ClientServer.App.ViewModels;
 
 internal sealed partial class ConnectionViewModel : ObservableObject
 {
-    private readonly Func<string, int, CancellationToken, Task<PlayerSession>> _connectSessionFactory;
-    private readonly Func<int, ServerTcp> _hostFactory;
-    private readonly Func<ServerTcp, LobbyService> _lobbyFactory;
+    private readonly IConnectionInfrastructure _infra;
     private readonly IUiDispatcher _ui;
-    private readonly CancellationTokenSource _closed = new();
 
     public event Action<PlayerSession>? LobbyReady;
-    public event Action<int, ServerTcp, LobbyService>? RefereeReady;
+    public event Action<RefereeHandle>? RefereeReady;
 
     [ObservableProperty] public partial string Address { get; set; } = "127.0.0.1";
     [ObservableProperty] public partial string Port { get; set; } = "1111";
@@ -26,34 +23,20 @@ internal sealed partial class ConnectionViewModel : ObservableObject
     [ObservableProperty] public partial string HostPort { get; set; } = "1111";
     [ObservableProperty] public partial string LogText { get; set; } = "";
 
-    public ConnectionViewModel(
-        Func<string, int, CancellationToken, Task<PlayerSession>> connectSessionFactory,
-        Func<int, ServerTcp> hostFactory,
-        Func<ServerTcp, LobbyService> lobbyFactory,
-        IUiDispatcher ui)
+    public ConnectionViewModel(IConnectionInfrastructure infra, IUiDispatcher ui)
     {
-        _connectSessionFactory = connectSessionFactory;
-        _hostFactory = hostFactory;
-        _lobbyFactory = lobbyFactory;
+        _infra = infra;
         _ui = ui;
     }
 
-    /// <summary>Called by the window when it closes; pending connects stop
-    /// before raising LobbyReady into a dead view.</summary>
-    public void Cancel() => _closed.Cancel();
-
-    public void Dispose() => _closed.Dispose();
-
-    /// <summary>Appends a line to the connection log (used by the window's
-    /// connect-factory for transport-level failure messages).</summary>
-    public void AppendLog(string message) => LogText += message + Environment.NewLine;
+    internal void AppendLog(string message) => LogText += message + Environment.NewLine;
 
     private static bool TryParsePort(string? text, out int port) =>
         int.TryParse(text?.Trim(), CultureInfo.InvariantCulture, out port)
         && port is > 0 and <= IPEndPoint.MaxPort;
 
     [RelayCommand]
-    private async Task ConnectAsync(CancellationToken cancellationToken)
+    private async Task ConnectAsync()
     {
         if (string.IsNullOrWhiteSpace(Address))
         {
@@ -70,14 +53,13 @@ internal sealed partial class ConnectionViewModel : ObservableObject
         PlayerSession? session = null;
         try
         {
-            session = await _connectSessionFactory(Address.Trim(), port, cancellationToken)
-                .ConfigureAwait(true);
-            AppendLog($"Connected to {Address.Trim()}:{port}.");
-            await session.ConnectAsync().ConfigureAwait(true);
+            session = await _infra.ConnectAsync(
+                Address.Trim(), port, PlayerName.Trim(), CancellationToken.None);
+            await session.ConnectAsync();
             LobbyReady?.Invoke(session);
         }
         catch (Exception ex) when (ex is OperationCanceledException or ObjectDisposedException
-                                        or IOException or SocketException or InvalidOperationException)
+                                        or IOException or SocketException)
         {
             AppendLog($"Connection failed: {ex.Message}");
             session?.Dispose();
@@ -93,21 +75,14 @@ internal sealed partial class ConnectionViewModel : ObservableObject
             return;
         }
 
-        ServerTcp server = _hostFactory(port);
         try
         {
-            server.Start();
+            RefereeReady?.Invoke(_infra.StartHost(port));
+            AppendLog($"Listening on port {port}.");
         }
         catch (Exception ex) when (ex is ObjectDisposedException or SocketException)
         {
             AppendLog($"Could not start the host: {ex.Message}");
-            server.Dispose();
-            return;
         }
-
-        AppendLog($"Listening on port {port}.");
-        LobbyService lobby = _lobbyFactory(server);
-        lobby.Start();
-        RefereeReady?.Invoke(port, server, lobby);
     }
 }

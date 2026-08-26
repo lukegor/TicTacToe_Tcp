@@ -1,10 +1,6 @@
-using System.IO;
-using System.Net.Sockets;
 using System.Windows;
 using ClientServer.App.ViewModels;
 using ClientServer.Core.Game;
-using ClientServer.Core.Transports;
-using Microsoft.Extensions.Logging;
 
 namespace ClientServer.App;
 
@@ -14,14 +10,13 @@ public partial class ConnectionWindow : Window
     private readonly Func<ServerWindow, bool>? _refereeProbe;
     private readonly ConnectionViewModel _viewModel;
 
-    public ConnectionWindow() : this(null, null, null)
+    public ConnectionWindow() : this(null, null)
     {
     }
 
     internal ConnectionWindow(
         Func<LobbyWindow, bool>? lobbyProbe,
-        Func<ServerWindow, bool>? refereeProbe,
-        IUiDispatcher? dispatcher)
+        Func<ServerWindow, bool>? refereeProbe)
     {
         _lobbyProbe = lobbyProbe;
         _refereeProbe = refereeProbe;
@@ -29,60 +24,22 @@ public partial class ConnectionWindow : Window
             ?? new SynchronizationContext();
         InitializeComponent();
         _viewModel = new ConnectionViewModel(
-            ConnectSessionAsync,
-            port => new ServerTcp(port, App.LoggerFactory.CreateLogger<ServerTcp>()),
-            server => new LobbyService(server, logger: App.LoggerFactory.CreateLogger<LobbyService>()),
-            dispatcher ?? new SynchronizationContextDispatcher(context));
+            BuildInfrastructure(),
+            new SynchronizationContextDispatcher(context));
         DataContext = _viewModel;
         _viewModel.LobbyReady += session =>
             OpenLobbyWindow(() => new LobbyWindow(session), () => session.Dispose());
-        _viewModel.RefereeReady += (port, server, lobby) =>
-            OpenRefereeWindow(() => new ServerWindow(lobby, port), () =>
+        _viewModel.RefereeReady += handle =>
+            OpenRefereeWindow(() => new ServerWindow(handle.Lobby, handle.Port), () =>
             {
-                lobby.Dispose();
-                server.Dispose();
+                handle.Lobby.Dispose();
+                handle.Server.Dispose();
             });
     }
 
-    /// <summary>Creates the transport, reconnect-factory and session — the exact
-    /// wiring the pre-MVVM click handler performed.</summary>
-    private async Task<PlayerSession> ConnectSessionAsync(
-        string host, int port, CancellationToken cancellationToken)
-    {
-        ClientTcp client = new(App.LoggerFactory.CreateLogger<ClientTcp>());
-        try
-        {
-            await client.ConnectAsync(host, port, cancellationToken).ConfigureAwait(true);
-            _viewModel.AppendLog($"Connected to {host}:{port}.");
-
-            ClientTcp? initialTransport = client;
-            async Task<IClientTransport> ReconnectFactory()
-            {
-                ClientTcp? reused = Interlocked.Exchange(ref initialTransport, null);
-                if (reused is not null)
-                {
-                    return reused;
-                }
-
-                ClientTcp fresh = new(App.LoggerFactory.CreateLogger<ClientTcp>());
-                await fresh.ConnectAsync(host, port, CancellationToken.None).ConfigureAwait(true);
-                return fresh;
-            }
-
-            PlayerSession session = new(ReconnectFactory, displayName: NameFromViewModel(),
-                logger: App.LoggerFactory.CreateLogger<PlayerSession>());
-            return session;
-        }
-        catch (Exception ex) when (ex is OperationCanceledException or ObjectDisposedException
-                                        or IOException or SocketException)
-        {
-            client.Dispose();
-            _viewModel.AppendLog($"Connection failed: {ex.Message}");
-            throw;
-        }
-    }
-
-    private string NameFromViewModel() => _viewModel.PlayerName;
+    private IConnectionInfrastructure BuildInfrastructure() =>
+        new RealConnectionInfrastructure(App.LoggerFactory,
+            message => _viewModel.AppendLog(message));
 
     private void OpenLobbyWindow(Func<LobbyWindow> createWindow, Action onClose)
     {
@@ -122,7 +79,6 @@ public partial class ConnectionWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
-        _viewModel.Cancel();
         base.OnClosed(e);
     }
 }

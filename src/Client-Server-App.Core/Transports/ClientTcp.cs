@@ -53,19 +53,14 @@ internal sealed class ClientTcp : IClientTransport, IDisposable
         _writer = new StreamWriter(client.GetStream(), Encoding.UTF8, bufferSize: 1024, leaveOpen: true)
         {
             AutoFlush = true,
-        };
-        File.AppendAllText(
-            Path.Combine(AppContext.BaseDirectory, "artifacts", "vmdiag.log"),
-            $"ASSIGN hash={System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(this)}" +
-            $" sockConnected={client.Connected}{Environment.NewLine}");
-        _logger.LogDebug("Connected to {Host}:{Port}.", host, port);
+        };        _logger.LogDebug("Connected to {Host}:{Port}.", host, port);
     }
 
     /// <inheritdoc />
     public void Start()
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        TcpClient? client = _client ?? throw new InvalidOperationException($"The client is not connected. [diag hash={System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(this)} assigned={_client is not null} connected={_client?.Connected}]");
+        TcpClient? client = _client ?? throw new InvalidOperationException("The client is not connected.");
         if (Interlocked.Exchange(ref _receiving, 1) != 0)
         {
             return;

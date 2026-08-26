@@ -38,7 +38,7 @@ public sealed class ConnectionWindowTests
         Func<LobbyWindow, bool>? lobbyProbe = null,
         Func<ServerWindow, bool>? refereeProbe = null)
     {
-        var window = HeadlessWindow.Prepare(new ConnectionWindow(lobbyProbe, refereeProbe, null));
+        var window =         HeadlessWindow.Prepare(new ConnectionWindow(lobbyProbe, refereeProbe));
         window.Show(); // off-screen: activates the full binding pipeline
         return window;
     }
