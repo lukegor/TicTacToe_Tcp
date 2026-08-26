@@ -7,9 +7,9 @@
         mc:Ignorable="d"
         Title="Client-Server App" Height="450" Width="800"
         WindowStartupLocation="CenterScreen">
-	<Grid>
-		<Button Content="Open Connection" Width="140" Height="30"
-				HorizontalAlignment="Center" VerticalAlignment="Center"
-				Click="OpenConnectionButton_Click" />
-	</Grid>
+    <Grid>
+        <Button Content="Open Connection" Width="140" Height="30"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                Click="OpenConnectionButton_Click" />
+    </Grid>
 </Window>

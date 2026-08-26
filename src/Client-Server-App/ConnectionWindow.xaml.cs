@@ -76,9 +76,4 @@ public partial class ConnectionWindow : Window
         window.Closed += (_, _) => onClose();
         window.Show();
     }
-
-    protected override void OnClosed(EventArgs e)
-    {
-        base.OnClosed(e);
-    }
 }

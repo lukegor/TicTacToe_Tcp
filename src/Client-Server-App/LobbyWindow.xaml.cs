@@ -25,7 +25,6 @@ public partial class LobbyWindow : Window
                 Show();
             }
         });
-        RoomsList.ItemsSource = viewModel.Rooms;
     }
 
     private void OpenGameWindow()

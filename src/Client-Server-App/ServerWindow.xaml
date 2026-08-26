@@ -6,40 +6,40 @@
         mc:Ignorable="d"
         Title="Referee" Height="420" Width="480"
         ResizeMode="NoResize" WindowStartupLocation="CenterOwner">
-	<Grid Margin="12">
-		<Grid.RowDefinitions>
-			<RowDefinition Height="*" />
-			<RowDefinition Height="110" />
-		</Grid.RowDefinitions>
+    <Window.Resources>
+        <ResourceDictionary Source="Themes/Shared.xaml" />
+    </Window.Resources>
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="110" />
+        </Grid.RowDefinitions>
 
-		<!-- Live room table -->
-		<ItemsControl x:Name="RoomsPanel" Grid.Row="0" ItemsSource="{Binding Rooms}">
-			<ItemsControl.ItemTemplate>
-				<DataTemplate>
-					<Grid Margin="0,2,0,2">
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="*" />
-							<ColumnDefinition Width="90" />
-							<ColumnDefinition Width="100" />
-						</Grid.ColumnDefinitions>
-						<TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
-						<TextBlock Grid.Column="1" Text="{Binding Players, StringFormat={}{0}/2}"
-						           VerticalAlignment="Center" />
-						<TextBlock Grid.Column="2" Text="{Binding Spectators}"
-						           VerticalAlignment="Center" />
-					</Grid>
-				</DataTemplate>
-			</ItemsControl.ItemTemplate>
-		</ItemsControl>
+        <!-- Live room table -->
+        <ItemsControl x:Name="RoomsPanel" ItemsSource="{Binding Rooms}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Grid Margin="0,2,0,2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="90" />
+                            <ColumnDefinition Width="100" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="{Binding Players, StringFormat={}{0}/2}"
+                                   VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" Text="{Binding Spectators}"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
 
-		<!-- Event log -->
-		<TextBox x:Name="OutputTextBox"
-				 Grid.Row="1"
-				 Margin="0,8,0,0"
-				 IsReadOnly="True"
-				 FontFamily="Consolas"
-				 TextWrapping="Wrap"
-				 VerticalScrollBarVisibility="Auto"
-				 Text="{Binding LogText}" />
-	</Grid>
+        <!-- Event log -->
+        <TextBox x:Name="OutputTextBox"
+                 Grid.Row="1"
+                 Style="{StaticResource LogOutput}"
+                 Margin="0,8,0,0"
+                 Text="{Binding LogText, Mode=OneWay}" />
+    </Grid>
 </Window>
