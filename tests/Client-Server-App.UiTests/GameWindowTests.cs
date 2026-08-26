@@ -56,6 +56,35 @@ public sealed class GameWindowTests : IDisposable
     }
 
     [WpfFact]
+    public async Task WaitingThenMyTurn_CellClick_SendsMoveRequest()
+    {
+        // Room-creator flow: window binds while the game is still waiting,
+        // then the opponent joins and the state flips to my turn.
+        var (session, transport) = UiTestSession.ConnectSeatedAsync(mark: "X", status: "waiting").GetAwaiter().GetResult();
+        try
+        {
+            GameWindow window = HeadlessWindow.Prepare(new GameWindow(session));
+            window.Show();
+            await TestDispatcher.FlushAsync();
+
+            transport.ReceiveLine(GameJson.Serialize(new GameStateRecord(
+                ["", "", "", "", "", "", "", "", ""], "X", "inProgress",
+                null, null, 1, Room: "duel", XName: "Alice", OName: "Bob")));
+            await TestDispatcher.FlushAsync();
+
+            Assert.Equal("Your move (X).", window.StatusText.Text);
+            Assert.True(UiAssert.TryPress(VisualTreeEx.FindChildren<System.Windows.Controls.Button>(window.BoardGrid).ElementAt(4)));
+            await TestDispatcher.FlushAsync();
+
+            Assert.Contains(transport.SentLines, l => l.Contains("\"moveRequest\"") && l.Contains("\"cell\":4"));
+        }
+        finally
+        {
+            session.Dispose();
+        }
+    }
+
+    [WpfFact]
     public async Task NotMyTurn_CellsDisabled_ClickSendsNothing()
     {
         ServerState(turn: "O", status: "inProgress");
@@ -187,7 +216,7 @@ public sealed class GameWindowTests : IDisposable
     }
 
     [WpfFact]
-    public async Task RestoredSeat_LogsRestore_RerendersFreshBoard()
+    public async Task RestoredSeat_RerendersFreshBoard()
     {
         _transport.SimulateDisconnect();
         await TestDispatcher.FlushAsync();
@@ -198,18 +227,17 @@ public sealed class GameWindowTests : IDisposable
                 "X", "inProgress", null, null, 2, Room: "duel"))));
         await TestDispatcher.FlushAsync();
 
-        Assert.Contains("your seat was restored", _window.OutputTextBox.Text);
         Assert.NotEqual("Connection lost — rejoining...", _window.StatusText.Text);
         Assert.All(Cells, c => Assert.True(c.IsEnabled));
     }
 
     [WpfFact]
-    public async Task ErrorEnvelope_AppendsToOutputBox()
+    public async Task ErrorEnvelope_ShowsNoticeInStatus()
     {
         _transport.ReceiveLine(GameJson.Serialize(new ErrorRecord("That cell is taken.")));
         await TestDispatcher.FlushAsync();
 
-        Assert.Contains("That cell is taken.", _window.OutputTextBox.Text);
+        Assert.Contains("That cell is taken.", _window.StatusText.Text);
     }
 
     [WpfFact]

@@ -16,7 +16,6 @@ internal sealed partial class GameViewModel : ObservableObject
 
     [ObservableProperty] public partial string StatusText { get; set; } = "Joining...";
     [ObservableProperty] public partial string TitleText { get; set; } = "Tic-Tac-Toe";
-    [ObservableProperty] public partial string OutputText { get; set; } = "";
     [ObservableProperty] public partial string RematchLabel { get; set; } = "Offer Rematch";
     [ObservableProperty] public partial bool RematchEnabled { get; set; }
 
@@ -31,17 +30,8 @@ internal sealed partial class GameViewModel : ObservableObject
         }
 
         session.StateReceived += state => _ui.Post(() => ApplyState(state));
-        session.Seated += joined => _ui.Post(() =>
-        {
-            if (joined.Restored)
-            {
-                AppendOutput("Reconnected — your seat was restored.");
-            }
-
-            ApplyState(joined.State);
-        });
-        session.ErrorReceived += message => AppendOutput(message);
-        session.LogReceived += AppendOutput;
+        session.Seated += joined => _ui.Post(() => ApplyState(joined.State));
+        session.ErrorReceived += message => _ui.Post(() => ShowNotice(message));
         session.ReconnectingStarted += () => _ui.Post(ShowBanner);
 
         if (session.CurrentState is { } initial)
@@ -59,6 +49,7 @@ internal sealed partial class GameViewModel : ObservableObject
         }
 
         RematchEnabled = false;
+        MoveCommand.NotifyCanExecuteChanged();
     }
 
     private void ApplyState(GameStateRecord state)
@@ -106,6 +97,7 @@ internal sealed partial class GameViewModel : ObservableObject
 
         StatusText = status;
         RefreshRematch(state);
+        MoveCommand.NotifyCanExecuteChanged();
     }
 
     private void RefreshRematch(GameStateRecord state)
@@ -136,7 +128,7 @@ internal sealed partial class GameViewModel : ObservableObject
         return spectator ? " (spectator)" : $" ({myMark})";
     }
 
-    private void AppendOutput(string message) => OutputText += message + Environment.NewLine;
+    private void ShowNotice(string message) => StatusText = message;
 
     private bool MoveCanExecute(int cell) =>
         _rendered is { Status: "inProgress" }
@@ -173,7 +165,7 @@ internal sealed partial class GameViewModel : ObservableObject
         catch (Exception ex) when (ex is InvalidOperationException or ObjectDisposedException
                                         or IOException or System.Net.Sockets.SocketException)
         {
-            AppendOutput($"{failurePrefix}: {ex.Message}");
+            ShowNotice($"{failurePrefix}: {ex.Message}");
         }
     }
 }
