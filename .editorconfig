@@ -493,14 +493,14 @@ dotnet_diagnostic.MA0197.severity = none
 dotnet_diagnostic.NU1902.severity = suggestion
 
 
-# Shippable sources: src/Client-Server-App.Core/** and src/Client-Server-App/**
+# Shippable sources: src/TicTacToe.Core/** and src/TicTacToe/**
 [**/src/**/*.cs]
 
 # Add a 'protected' constructor or the 'static' keyword to the class declaration.
 dotnet_diagnostic.S1118.severity = none
 
 
-# Test projects: tests/Client-Server-App.Tests/** and tests/Client-Server-App.UiTests/**
+# Test projects: tests/TicTacToe.Tests/** and tests/TicTacToe.UiTests/**
 # (also covers the link-compiled tests/TestSupport/** sources)
 [**/tests/**/*.cs]
 

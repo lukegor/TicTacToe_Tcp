@@ -1,0 +1,64 @@
+<Window x:Class="TicTacToe.GameWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="{Binding TitleText}" Height="540" Width="480"
+        ResizeMode="NoResize" WindowStartupLocation="CenterOwner">
+    <Window.Resources>
+        <ResourceDictionary Source="Themes/Shared.xaml" />
+    </Window.Resources>
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="StatusText" Text="{Binding StatusText}"
+                   FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"
+                   HorizontalAlignment="Center" Margin="0,0,0,16" />
+
+        <Border Grid.Row="1" Style="{StaticResource SectionCard}"
+                Width="336" Padding="8" VerticalAlignment="Center"
+                HorizontalAlignment="Center">
+            <ItemsControl x:Name="BoardGrid" ItemsSource="{Binding Cells}" Focusable="False">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="3" Columns="3" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="2">
+                            <Button FontSize="42" FontWeight="SemiBold"
+                                    HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="96"
+                                    Content="{Binding Mark}"
+                                    IsEnabled="{Binding IsEnabled}"
+                                    Command="{Binding DataContext.MoveCommand,
+                                              RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding CellIndex}" />
+                            <Border Background="{DynamicResource SystemFillColorCautionBackgroundBrush}"
+                                    IsHitTestVisible="False"
+                                    Visibility="{Binding IsHighlighted,
+                                                 Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Border>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,16,0,0"
+                    HorizontalAlignment="Center">
+            <Button x:Name="RematchButton"
+                    Content="{Binding RematchLabel}"
+                    Style="{StaticResource PrimaryButton}"
+                    IsEnabled="{Binding RematchEnabled}"
+                    Command="{Binding OfferRematchCommand}" Width="160" Height="34" />
+            <Button x:Name="LeaveButton" Content="Leave" Width="90" Height="34"
+                    Margin="12,0,0,0"
+                    Command="{Binding LeaveCommand}" />
+        </StackPanel>
+    </Grid>
+</Window>

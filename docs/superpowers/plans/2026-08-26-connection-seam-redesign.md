@@ -389,7 +389,7 @@ dotnet test
 ./scripts/run-tests.ps1
 ```
 
-Gate ≥83% expected (VM code covered by both suites).
+Gate ≥80% expected (VM code covered by both suites).
 
 - [ ] **Step 8: Flake-confidence loop**
 

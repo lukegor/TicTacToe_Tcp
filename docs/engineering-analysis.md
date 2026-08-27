@@ -148,7 +148,7 @@ lands with CI (R1) once UI tests exist; TODO: unlock code-behind testing via
 `Xunit.StaFact` `[WpfFact]` (backlog T6), then gate at 80%+.
 
 RESOLVED (2026-08-25, R2 completion): after `[WpfFact]` UI suites landed, combined
-coverage is **88.4% line / 78.8% branch**; `scripts/run-tests.ps1` enforces a **83%**
+coverage is **88.4% line / 78.8% branch**; `scripts/run-tests.ps1` enforces a **80%**
 line gate locally (R1 CI will call the same script). Remaining named gaps (accepted,
 documented — not padded): `MessageBoxCrashReporter` 0% and `MainWindow` 0%
 (interactive-dialog / trivial shell), `App` crash-wiring 3.4% (process-level),

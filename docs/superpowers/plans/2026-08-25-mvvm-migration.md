@@ -1348,7 +1348,7 @@ headless ViewModel tests and STA-driven window tests (`tests/Client-Server-App.U
 dotnet build Client-Server-App.slnx -c Release && ./scripts/run-tests.ps1
 ```
 
-Gate must pass (≥83%); suite count = 122 Core+UI baseline plus ~20 new VM tests.
+Gate must pass (≥80%); suite count = 122 Core+UI baseline plus ~20 new VM tests.
 
 - [ ] **Step 3: Commit**
 

@@ -1,0 +1,79 @@
+<Window x:Class="TicTacToe.LobbyWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Lobby" Height="420" Width="480"
+        ResizeMode="NoResize" WindowStartupLocation="CenterOwner">
+    <Window.Resources>
+        <ResourceDictionary Source="Themes/Shared.xaml" />
+    </Window.Resources>
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="110" />
+        </Grid.RowDefinitions>
+
+        <Border Style="{StaticResource SectionCard}" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Room name:" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <TextBox x:Name="RoomNameBox" Grid.Column="1" VerticalAlignment="Center"
+                         Text="{Binding RoomNameInput, UpdateSourceTrigger=PropertyChanged}" />
+                <Button x:Name="CreateButton" Grid.Column="2" Content="Create room"
+                        Style="{StaticResource PrimaryButton}" Height="34" Margin="10,0,0,0"
+                        Command="{Binding CreateRoomCommand}" />
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <ListBox x:Name="RoomsList" ItemsSource="{Binding Rooms}">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                        <Setter Property="Padding" Value="12,8" />
+                        <Setter Property="Margin" Value="0,2" />
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <DockPanel Margin="2">
+                            <Button DockPanel.Dock="Right" Content="Join" Width="70"
+                                    Command="{Binding DataContext.JoinRoomCommand,
+                                              RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}" />
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="0,0,10,0" />
+                                <TextBlock Text="{Binding Label}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                        </DockPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <TextBlock Text="No rooms yet — create one!"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Visibility="Collapsed">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock" BasedOn="{StaticResource PageSubtitle}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Items.Count, ElementName=RoomsList}" Value="0">
+                                <Setter Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </Grid>
+
+        <TextBox x:Name="OutputTextBox"
+                 Grid.Row="2"
+                 Style="{StaticResource LogOutput}"
+                 Margin="0,12,0,0"
+                 Text="{Binding LogText, Mode=OneWay}" />
+    </Grid>
+</Window>

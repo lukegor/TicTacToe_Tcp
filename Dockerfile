@@ -15,12 +15,12 @@ WORKDIR /src
 
 # Copy project + central build config first for better layer caching on restore.
 COPY ["Directory.Build.props", "Directory.Packages.props", "./"]
-COPY ["src/Client-Server-App.Core/Client-Server-App.Core.csproj", "src/Client-Server-App.Core/"]
-COPY ["src/Client-Server-App/Client-Server-App.csproj", "src/Client-Server-App/"]
-RUN dotnet restore "src/Client-Server-App/Client-Server-App.csproj"
+COPY ["src/TicTacToe.Core/TicTacToe.Core.csproj", "src/TicTacToe.Core/"]
+COPY ["src/TicTacToe/TicTacToe.csproj", "src/TicTacToe/"]
+RUN dotnet restore "src/TicTacToe/TicTacToe.csproj"
 
 COPY . .
-RUN dotnet publish "src/Client-Server-App/Client-Server-App.csproj" `
+RUN dotnet publish "src/TicTacToe/TicTacToe.csproj" `
     -c Release `
     -r win-x64 `
     --self-contained true `
@@ -32,4 +32,4 @@ FROM mcr.microsoft.com/windows/servercore:ltsc2022 AS final
 WORKDIR /app
 COPY --from=build ["/app", "."]
 
-ENTRYPOINT ["Client-Server-App.exe"]
+ENTRYPOINT ["TicTacToe.exe"]

@@ -1,7 +1,7 @@
-using ClientServer.Core.Game;
-using ClientServer.Core.Transports;
+using TicTacToe.Core.Game;
+using TicTacToe.Core.Transports;
 
-namespace ClientServer.TestSupport;
+namespace TicTacToe.TestSupport;
 
 internal static class UiTestSession
 {

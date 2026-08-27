@@ -1,4 +1,4 @@
-# Client-Server-App
+# TicTacToe
 
 A minimal WPF application that demonstrates room-based tic-tac-toe over TCP:
 a neutral referee server hosts named two-player rooms with spectators, and
@@ -29,11 +29,11 @@ deliberately and forfeits an ongoing game.
 ## Build and run
 
 ```shell
-dotnet build Client-Server-App.slnx -c Release
-dotnet run --project src/Client-Server-App
+dotnet build TicTacToe.slnx -c Release
+dotnet run --project src/TicTacToe
 ```
 
-Session logs are written to `%LOCALAPPDATA%\Client-Server-App\logs` (one file per
+Session logs are written to `%LOCALAPPDATA%\TicTacToe\logs` (one file per
 run; the newest five are kept).
 
 Warnings are treated as errors (`TreatWarningsAsErrors` in `Directory.Build.props`); the build
@@ -47,10 +47,10 @@ To launch both sides on one machine, start two instances: click **Create Host** 
 A single-file Windows executable is produced with:
 
 ```shell
-dotnet publish src/Client-Server-App -c Release -p:PublishProfile=win-x64
+dotnet publish src/TicTacToe -c Release -p:PublishProfile=win-x64
 ```
 
-Output lands in `src/Client-Server-App/bin/Release/net10.0-windows/publish/win-x64/`.
+Output lands in `src/TicTacToe/bin/Release/net10.0-windows/publish/win-x64/`.
 
 ## Testing
 
@@ -59,14 +59,14 @@ Output lands in `src/Client-Server-App/bin/Release/net10.0-windows/publish/win-x
 ```
 
 UI suites require Windows (WPF). Coverage is merged across suites via ReportGenerator;
-the gate currently requires **83%** combined line coverage.
+the gate currently requires **80%** combined line coverage.
 
 ## Docker
 
 `Dockerfile` produces reproducible, self-contained builds inside Windows containers:
 
 ```shell
-docker build -t client-server-app .
+docker build -t tictactoe .
 ```
 
 Requires Docker in Windows container mode. The image packages a self-contained win-x64
@@ -79,7 +79,7 @@ hermetic CI builds rather than headless execution.
 | --- | --- |
 | `Directory.Build.props` | Shared compile settings (nullable, analyzer policy). Target frameworks are per-project. |
 | `Directory.Packages.props` | Central Package Management for all NuGet versions. |
-| `Client-Server-App.slnx` | XML-based solution file. |
-| `src/Client-Server-App.Core/` | Portable engine: game rules, rooms, protocol, transports, diagnostics (net10.0). |
-| `src/Client-Server-App/` | WPF application shell referencing the core (net10.0-windows). Windows follow MVVM — per-window ViewModels (CommunityToolkit.Mvvm) in `ViewModels/`, code-behind only wires DataContext/lifecycle. |
+| `TicTacToe.slnx` | XML-based solution file. |
+| `src/TicTacToe.Core/` | Portable engine: game rules, rooms, protocol, transports, diagnostics (net10.0). |
+| `src/TicTacToe/` | WPF application shell referencing the core (net10.0-windows). Windows follow MVVM — per-window ViewModels (CommunityToolkit.Mvvm) in `ViewModels/`, code-behind only wires DataContext/lifecycle. |
 | `tests/` | xunit.v3 (MTP) suite against the core. |

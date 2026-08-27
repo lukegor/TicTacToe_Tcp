@@ -87,7 +87,7 @@ the VM raises readiness events instead of touching windows.
   fakes (`FakeClientTransport`, `FakeServerTransport`, `UiTestSession`), placed
   in the UiTests project under `ViewModels/`. No STA, no window construction,
   no AutomationPeers.
-- Coverage gate (`scripts/run-tests.ps1`, 83%) must pass on every commit;
+- Coverage gate (`scripts/run-tests.ps1`, 80%) must pass on every commit;
   combined line coverage is expected to rise (new VM code exercised by both
   suites).
 

@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace ClientServer.TestSupport;
+namespace TicTacToe.TestSupport;
 
 public sealed class CapturingLogger : ILogger
 {

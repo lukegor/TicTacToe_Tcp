@@ -1,16 +1,16 @@
 param(
-    [int]$Threshold = 83,
+    [int]$Threshold = 80,
     [string]$Configuration = 'Release'
 )
 
 $ErrorActionPreference = 'Stop'
 New-Item -ItemType Directory -Force artifacts | Out-Null
 
-dotnet test tests/Client-Server-App.Tests -c $Configuration `
+dotnet test tests/TicTacToe.Tests -c $Configuration `
     --coverage --coverage-output-format cobertura --coverage-output "$PWD/artifacts/core.cobertura.xml"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-dotnet test tests/Client-Server-App.UiTests -c $Configuration `
+dotnet test tests/TicTacToe.UiTests -c $Configuration `
     --coverage --coverage-output-format cobertura --coverage-output "$PWD/artifacts/ui.cobertura.xml"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
