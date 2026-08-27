@@ -7,6 +7,14 @@
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- MinVer: tags are v-prefixed (e.g. v1.0.0); the default prefix is empty so
+         v-tags would otherwise be ignored silently (see docs/minver-adoption-guide.md). -->
+    <MinVerTagPrefix>v</MinVerTagPrefix>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Derives assembly/file/informational versions from git tags (see https://github.com/adamralph/minver). -->
+    <PackageReference Include="MinVer" PrivateAssets="all" />
+  </ItemGroup>
 
 </Project>
