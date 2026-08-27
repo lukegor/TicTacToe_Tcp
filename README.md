@@ -7,6 +7,8 @@ client instances browse a live lobby to create or join a game.
 - **Connect** – join as a player: browse rooms, create one, or join as player/spectator.
 - **Host** – run the referee: a neutral lobby that owns rooms and never plays.
 
+![TicTacToe game](assets/tic-tac-toe-game.png)
+
 ## Playing
 
 Enter your name in the Connect panel (optional — a guest name is assigned if you
